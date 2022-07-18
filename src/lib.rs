@@ -176,11 +176,22 @@ mod test {
         assert_eq!(cpu.status & 0b0000_0010, 0b10);
     }
 
-    // #[test]
-    // fn test_0xaa_tax_move_a_to_x() {
-    //     let mut cpu = CPU::new();
-    //     cpu.load_and_run(vec![0xa9, 10, 0xaa, 0x00]);
-    //
-    //     assert_eq!(cpu.register_x, 10);
-    // }
+    #[test]
+    fn test_get_operand_address_immediate() {
+        let mut cpu = CPU::new();
+
+        let address = cpu.get_operand_address(&AddressingMode::Immediate);
+
+        assert_eq!(address, 0x00)
+    }
+
+    #[test]
+    fn test_get_operand_address_zero_page() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x00, 0x12);
+
+        let address = cpu.get_operand_address(&AddressingMode::ZeroPage);
+
+        assert_eq!(address, 0x12)
+    }
 }
