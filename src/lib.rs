@@ -48,26 +48,32 @@ impl CPU {
                 // LDA $a1,X
                 // ```
                 // In this case we want to return 0xa2, because we take the 0xa1 and we add X to it (which is 0x01) to get 0xa2. Just like with zero page addressing we have the program counter like 0x0004, and if we read the value in memory at 0x0004 it is 0xa1, so we need to take the value at the program counter and add x to it.
-                self.memory.mem_read(self.program_counter).wrapping_add(self.register_x) as u16
+                self.memory
+                    .mem_read(self.program_counter)
+                    .wrapping_add(self.register_x) as u16
             }
-            AddressingMode::ZeroPageY => {
-                self.memory.mem_read(self.program_counter).wrapping_add(self.register_y) as u16
-            }
-            AddressingMode::Absolute => {
-                self.memory.mem_read_u16(self.program_counter)
-            }
-            AddressingMode::AbsoluteX => {
-                self.memory.mem_read_u16(self.program_counter).wrapping_add(self.register_x as u16)
-            }
-            AddressingMode::AbsoluteY => {
-                self.memory.mem_read_u16(self.program_counter).wrapping_add(self.register_y as u16)
-            }
+            AddressingMode::ZeroPageY => self
+                .memory
+                .mem_read(self.program_counter)
+                .wrapping_add(self.register_y) as u16,
+            AddressingMode::Absolute => self.memory.mem_read_u16(self.program_counter),
+            AddressingMode::AbsoluteX => self
+                .memory
+                .mem_read_u16(self.program_counter)
+                .wrapping_add(self.register_x as u16),
+            AddressingMode::AbsoluteY => self
+                .memory
+                .mem_read_u16(self.program_counter)
+                .wrapping_add(self.register_y as u16),
             AddressingMode::Indirect => {
                 let address = self.memory.mem_read_u16(self.program_counter);
                 self.memory.mem_read_u16(address)
             }
             AddressingMode::IndirectX => {
-                let address = self.memory.mem_read(self.program_counter).wrapping_add(self.register_x) as u16;
+                let address = self
+                    .memory
+                    .mem_read(self.program_counter)
+                    .wrapping_add(self.register_x) as u16;
                 self.memory.mem_read_u16(address)
             }
             AddressingMode::IndirectY => {
@@ -80,7 +86,6 @@ impl CPU {
             }
         }
     }
-
 
     fn lda(&mut self, mode: &AddressingMode) {
         let address = self.get_operand_address(mode);
@@ -133,7 +138,12 @@ impl CPU {
                 Some(OpCode { name: "BRK", .. }) => {
                     return;
                 }
-                Some(OpCode { name: "LDA", cycles, address_mode: mode, .. }) => {
+                Some(OpCode {
+                    name: "LDA",
+                    cycles,
+                    address_mode: mode,
+                    ..
+                }) => {
                     self.lda(mode);
                     self.program_counter += *cycles as u16;
                 }

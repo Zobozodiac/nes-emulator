@@ -17,7 +17,7 @@ impl OpCode {
             name,
             bytes,
             cycles,
-            address_mode
+            address_mode,
         }
     }
 }
@@ -41,7 +41,10 @@ lazy_static! {
         let mut codes = HashMap::new();
 
         codes.insert(0xa9, OpCode::new("LDA", 2, 2, AddressingMode::Immediate));
-        codes.insert(0x00, OpCode::new("BRK", 1, 7, AddressingMode::NoneAddressing));
+        codes.insert(
+            0x00,
+            OpCode::new("BRK", 1, 7, AddressingMode::NoneAddressing),
+        );
 
         codes
     };

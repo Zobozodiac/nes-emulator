@@ -4,9 +4,7 @@ pub struct Memory {
 
 impl Memory {
     pub fn new(storage: [u8; 0xFFFF]) -> Self {
-        Memory {
-            storage
-        }
+        Memory { storage }
     }
 
     pub fn mem_write(&mut self, addr: u16, data: u8) {
