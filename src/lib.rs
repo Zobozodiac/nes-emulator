@@ -130,13 +130,13 @@ impl CPU {
             let opcode = opcodes::OPSCODES_MAP.get(&code);
 
             match opcode {
-                Some(OpCode {name: "BRK", ..}) => {
-                    return
-                },
-                Some(OpCode {name: "LDA", cycles, address_mode: mode, ..}) => {
+                Some(OpCode { name: "BRK", .. }) => {
+                    return;
+                }
+                Some(OpCode { name: "LDA", cycles, address_mode: mode, .. }) => {
                     self.lda(mode);
                     self.program_counter += *cycles as u16;
-                },
+                }
                 _ => {
                     todo!()
                 }
