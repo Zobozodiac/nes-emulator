@@ -134,23 +134,29 @@ impl CPU {
 
             let opcode = opcodes::OPSCODES_MAP.get(&code);
 
-            match opcode {
-                Some(OpCode { name: "BRK", .. }) => {
+            let OpCode {
+                name,
+                cycles,
+                address_mode: mode,
+                ..
+            } = match opcode {
+                Some(valid_opcode) => valid_opcode,
+                None => panic!("OpCode not found in HashMap."),
+            };
+
+            match *name {
+                "BRK" => {
                     return;
                 }
-                Some(OpCode {
-                    name: "LDA",
-                    cycles,
-                    address_mode: mode,
-                    ..
-                }) => {
+                "LDA" => {
                     self.lda(mode);
-                    self.program_counter += *cycles as u16;
                 }
                 _ => {
                     todo!()
                 }
             }
+
+            self.program_counter += *cycles as u16;
         }
     }
 
