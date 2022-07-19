@@ -1,3 +1,8 @@
+"""
+The two initial strings which are used to make the opcodes were gained from copying and pasting bits of text from
+[here](https://www.masswerk.at/6502/6502_instruction_set.html).
+"""
+
 opcodes = """BRK impl
 ORA X,ind
 ---
