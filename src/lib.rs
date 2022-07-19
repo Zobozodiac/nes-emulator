@@ -25,6 +25,31 @@ impl CPU {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.register_a = 0;
+        self.register_x = 0;
+        self.register_y = 0;
+        self.status = 0;
+
+        self.program_counter = self.memory.mem_read_u16(0xFFFC);
+    }
+
+    fn update_zero_and_negative_flags(&mut self, result: u8) {
+        // Here we set the zero flag. The 0bxxxx_xxxx parts are literally to do bitwise AND or OR to set that particular bit of the status flag.
+        if result == 0 {
+            self.status = self.status | 0b000_0010;
+        } else {
+            self.status = self.status & 0b1111_1101;
+        }
+
+        // Here we set the negative flag, the definition of negative in this case is that the first bit is 1.
+        if result & 0b1000_0000 != 0 {
+            self.status = self.status | 0b1000_0000;
+        } else {
+            self.status = self.status & 0b0111_1111;
+        }
+    }
+
     /// We get the address in the memory that the address mode refers to.
     fn get_operand_address(&self, mode: &AddressingMode) -> u16 {
         match mode {
@@ -100,22 +125,6 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_x);
     }
 
-    fn update_zero_and_negative_flags(&mut self, result: u8) {
-        // Here we set the zero flag. The 0bxxxx_xxxx parts are literally to do bitwise AND or OR to set that particular bit of the status flag.
-        if result == 0 {
-            self.status = self.status | 0b000_0010;
-        } else {
-            self.status = self.status & 0b1111_1101;
-        }
-
-        // Here we set the negative flag, the definition of negative in this case is that the first bit is 1.
-        if result & 0b1000_0000 != 0 {
-            self.status = self.status | 0b1000_0000;
-        } else {
-            self.status = self.status & 0b0111_1111;
-        }
-    }
-
     pub fn load_and_run(&mut self, program: Vec<u8>) {
         self.load(program);
         self.reset();
@@ -158,15 +167,6 @@ impl CPU {
 
             self.program_counter += *cycles as u16;
         }
-    }
-
-    pub fn reset(&mut self) {
-        self.register_a = 0;
-        self.register_x = 0;
-        self.register_y = 0;
-        self.status = 0;
-
-        self.program_counter = self.memory.mem_read_u16(0xFFFC);
     }
 }
 
