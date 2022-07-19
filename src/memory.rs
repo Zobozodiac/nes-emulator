@@ -1,3 +1,4 @@
+/// A memory object with read and write operations. Stores an array of 0xFFFF bytes.
 pub struct Memory {
     storage: [u8; 0xFFFF],
 }
@@ -7,6 +8,16 @@ impl Memory {
         Memory { storage }
     }
 
+    /// Read a single byte from the memory
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nes_emulator::memory::Memory;
+    ///
+    /// let mut memory = Memory::new([0; 0xFFFF]);
+    /// memory.mem_write(0x0001, 0x12)
+    /// ```
     pub fn mem_write(&mut self, address: u16, data: u8) {
         self.storage[address as usize] = data;
     }

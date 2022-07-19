@@ -1,8 +1,8 @@
 use opcodes::{AddressingMode, OpCode};
 
-mod memory;
+pub mod memory;
 
-mod opcodes;
+pub mod opcodes;
 
 pub struct CPU {
     register_a: u8,
