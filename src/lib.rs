@@ -192,16 +192,106 @@ mod test {
 
         let address = cpu.get_operand_address(&AddressingMode::Immediate);
 
-        assert_eq!(address, 0x00)
+        assert_eq!(address, 0x0000)
     }
 
     #[test]
     fn test_get_operand_address_zero_page() {
+        // The program counter is pointing to 0x00 so we set this to 0x12 and check it works
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x00, 0x12);
 
         let address = cpu.get_operand_address(&AddressingMode::ZeroPage);
 
-        assert_eq!(address, 0x12)
+        assert_eq!(address, 0x0012)
+    }
+
+    #[test]
+    fn test_get_operand_address_zero_page_x() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x01;
+        cpu.memory.mem_write(0x00, 0x12);
+
+        let address = cpu.get_operand_address(&AddressingMode::ZeroPageX);
+
+        assert_eq!(address, 0x0013)
+    }
+
+    #[test]
+    fn test_get_operand_address_zero_page_y() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x01;
+        cpu.memory.mem_write(0x00, 0x12);
+
+        let address = cpu.get_operand_address(&AddressingMode::ZeroPageY);
+
+        assert_eq!(address, 0x0013)
+    }
+
+    #[test]
+    fn test_get_operand_address_absolute() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x00, 0x1234);
+
+        let address = cpu.get_operand_address(&AddressingMode::Absolute);
+
+        assert_eq!(address, 0x1234)
+    }
+
+    #[test]
+    fn test_get_operand_address_absolute_x() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x01;
+        cpu.memory.mem_write_u16(0x00, 0x1234);
+
+        let address = cpu.get_operand_address(&AddressingMode::AbsoluteX);
+
+        assert_eq!(address, 0x1235)
+    }
+
+    #[test]
+    fn test_get_operand_address_absolute_y() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x01;
+        cpu.memory.mem_write_u16(0x00, 0x1234);
+
+        let address = cpu.get_operand_address(&AddressingMode::AbsoluteY);
+
+        assert_eq!(address, 0x1235)
+    }
+
+    #[test]
+    fn test_get_operand_address_indirect() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x00, 0x1234);
+        cpu.memory.mem_write_u16(0x1234, 0x5678);
+
+        let address = cpu.get_operand_address(&AddressingMode::Indirect);
+
+        assert_eq!(address, 0x5678)
+    }
+
+    #[test]
+    fn test_get_operand_address_indirect_x() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x01;
+        cpu.memory.mem_write(0x00, 0x12);
+        cpu.memory.mem_write_u16(0x13, 0x3456);
+
+        let address = cpu.get_operand_address(&AddressingMode::IndirectX);
+
+        assert_eq!(address, 0x3456)
+    }
+
+    #[test]
+    fn test_get_operand_address_indirect_y() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x01;
+        cpu.memory.mem_write_u16(0x00, 0x12);
+        cpu.memory.mem_write_u16(0x12, 0x3456);
+
+        let address = cpu.get_operand_address(&AddressingMode::IndirectY);
+
+        assert_eq!(address, 0x3457)
     }
 }
