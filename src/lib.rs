@@ -125,6 +125,14 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_x);
     }
 
+    fn ora(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_address(mode);
+        let value = self.memory.mem_read(address);
+
+        self.register_a = self.register_a | value;
+        self.update_zero_and_negative_flags(self.register_a);
+    }
+
     pub fn load_and_run(&mut self, program: Vec<u8>) {
         self.load(program);
         self.reset();
@@ -304,5 +312,28 @@ mod test_opcodes {
         cpu.load_and_run(vec![0xa9, 0x00, 0x00]);
 
         assert_eq!(cpu.status & 0b0000_0010, 0b10);
+    }
+
+    #[test]
+    fn test_lda() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0x12);
+
+        cpu.lda(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0x12);
+        assert_eq!(cpu.status & 0b0000_0010, 0b00);
+        assert_eq!(cpu.status & 0b1000_0000, 0);
+    }
+
+    #[test]
+    fn test_ora() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b0000_0001;
+        cpu.memory.mem_write(0x0000, 0b0000_0010);
+
+        cpu.ora(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0b0000_0011);
     }
 }
