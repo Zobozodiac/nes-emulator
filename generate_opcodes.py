@@ -494,8 +494,10 @@ def create_opcodes(opcodes):
 
             byte_num, cycles, extras = info[hex_value]
 
+            extras = "" if extras == 0 else f" // extras {extras}"
+
             # new_opcodes.append((hex_value, name, address_mode))
-            new_opcodes.append(f"codes.insert({hex_value}, OpCode::new(\"{name}\", {byte_num}, {cycles}, {address_mode})); // extras {extras}")
+            new_opcodes.append(f"codes.insert({hex_value}, OpCode::new(\"{name}\", {byte_num}, {cycles}, {address_mode}));{extras}")
 
     return "\n".join(new_opcodes)
 
