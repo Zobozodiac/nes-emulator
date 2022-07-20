@@ -1,4 +1,6 @@
+use crate::status::Flag;
 use opcodes::{AddressingMode, OpCode};
+use std::ops::Add;
 
 pub mod memory;
 
@@ -27,6 +29,7 @@ impl CPU {
         }
     }
 
+    /// Reset the CPU to its default
     pub fn reset(&mut self) {
         self.register_a = 0;
         self.register_x = 0;
@@ -98,9 +101,43 @@ impl CPU {
         }
     }
 
-    fn lda(&mut self, mode: &AddressingMode) {
+    fn get_operand_address_value(&mut self, mode: &AddressingMode) -> u8 {
         let address = self.get_operand_address(mode);
         let value = self.memory.mem_read(address);
+
+        value
+    }
+
+    /// Add a value and the Accumulator together with a Carry.
+    ///
+    /// Setting overflow is the hardest thing here, but essentially the 8th bit encodes if a number
+    /// is positive or negative. So we are comparing the result and saying if both values are
+    /// positive but the result is negative then we have overflow, and vice versa if both are
+    /// negative but the result is positive then we have overflow.
+    fn adc(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let initial_carry = self.status.read_flag(Flag::Carry) as u8;
+        let result = (self.register_a as u16)
+            .add(value as u16)
+            .add(initial_carry as u16);
+
+        let [lo, hi] = u16::to_le_bytes(result);
+
+        let overflow = ((self.register_a ^ lo) & (value ^ lo) & 0b1000_0000) > 0;
+
+        // Set the result in the accumulator
+        self.register_a = lo;
+
+        self.status.set_zero_flag(lo);
+        self.status.set_negative_flag(lo);
+        self.status.set_flag(Flag::Carry, hi > 0);
+        self.status.set_flag(Flag::Overflow, overflow);
+    }
+
+    /// Load Accumulator
+    fn lda(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
 
         self.register_a = value;
         let result = self.register_a;
@@ -108,6 +145,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
+    /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
         let result = self.register_x;
@@ -115,9 +153,9 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
+    /// Bitwise OR with a value and the Accumulator
     fn ora(&mut self, mode: &AddressingMode) {
-        let address = self.get_operand_address(mode);
-        let value = self.memory.mem_read(address);
+        let value = self.get_operand_address_value(mode);
 
         self.register_a = self.register_a | value;
         let result = self.register_a;
@@ -288,6 +326,81 @@ mod test_address_modes {
 mod test_opcodes {
     use super::*;
     use crate::status::Flag;
+
+    #[test]
+    fn test_adc() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x12;
+        cpu.memory.mem_write(0x0000, 0x34);
+
+        cpu.adc(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0x46);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), false);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), false);
+    }
+
+    #[test]
+    fn test_adc_zero() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x00;
+        cpu.memory.mem_write(0x0000, 0x00);
+
+        cpu.adc(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0x00);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), true);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), false);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), false);
+    }
+
+    #[test]
+    fn test_adc_negative() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b1000_1010;
+        cpu.memory.mem_write(0x0000, 0b0000_0001);
+
+        cpu.adc(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0b1000_1011);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), true);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), false);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), false);
+    }
+
+    #[test]
+    fn test_adc_carry() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b1100_1010;
+        cpu.memory.mem_write(0x0000, 0b0100_0001);
+
+        cpu.adc(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0b0000_1011);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), false);
+    }
+
+    #[test]
+    fn test_adc_overflow() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b1000_1010;
+        cpu.memory.mem_write(0x0000, 0b1000_0001);
+
+        cpu.adc(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0b0000_1011);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), true);
+    }
 
     #[test]
     fn test_lda() {
