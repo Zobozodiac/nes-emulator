@@ -4,6 +4,8 @@ pub mod memory;
 
 pub mod opcodes;
 
+pub mod status;
+
 pub struct CPU {
     register_a: u8,
     register_x: u8,
