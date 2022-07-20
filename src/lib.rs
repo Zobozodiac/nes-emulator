@@ -10,7 +10,7 @@ pub struct CPU {
     register_a: u8,
     register_x: u8,
     register_y: u8,
-    status: u8,
+    status: status::Status,
     program_counter: u16,
     memory: memory::Memory,
 }
@@ -21,7 +21,7 @@ impl CPU {
             register_a: 0,
             register_x: 0,
             register_y: 0,
-            status: 0,
+            status: status::Status::new(),
             program_counter: 0,
             memory: memory::Memory::new([0; 0xFFFF]),
         }
@@ -31,25 +31,9 @@ impl CPU {
         self.register_a = 0;
         self.register_x = 0;
         self.register_y = 0;
-        self.status = 0;
+        self.status = status::Status::new();
 
         self.program_counter = self.memory.mem_read_u16(0xFFFC);
-    }
-
-    fn update_zero_and_negative_flags(&mut self, result: u8) {
-        // Here we set the zero flag. The 0bxxxx_xxxx parts are literally to do bitwise AND or OR to set that particular bit of the status flag.
-        if result == 0 {
-            self.status = self.status | 0b000_0010;
-        } else {
-            self.status = self.status & 0b1111_1101;
-        }
-
-        // Here we set the negative flag, the definition of negative in this case is that the first bit is 1.
-        if result & 0b1000_0000 != 0 {
-            self.status = self.status | 0b1000_0000;
-        } else {
-            self.status = self.status & 0b0111_1111;
-        }
     }
 
     /// We get the address in the memory that the address mode refers to.
@@ -119,12 +103,16 @@ impl CPU {
         let value = self.memory.mem_read(address);
 
         self.register_a = value;
-        self.update_zero_and_negative_flags(self.register_a);
+        let result = self.register_a;
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
     }
 
     fn tax(&mut self) {
         self.register_x = self.register_a;
-        self.update_zero_and_negative_flags(self.register_x);
+        let result = self.register_x;
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
     }
 
     fn ora(&mut self, mode: &AddressingMode) {
@@ -132,7 +120,9 @@ impl CPU {
         let value = self.memory.mem_read(address);
 
         self.register_a = self.register_a | value;
-        self.update_zero_and_negative_flags(self.register_a);
+        let result = self.register_a;
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
     }
 
     pub fn load_and_run(&mut self, program: Vec<u8>) {
@@ -297,24 +287,7 @@ mod test_address_modes {
 #[cfg(test)]
 mod test_opcodes {
     use super::*;
-
-    #[test]
-    fn test_0xa9_lda_immediate_load_data() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0x05, 0x00]);
-
-        assert_eq!(cpu.register_a, 0x05);
-        assert_eq!(cpu.status & 0b0000_0010, 0b00);
-        assert_eq!(cpu.status & 0b1000_0000, 0);
-    }
-
-    #[test]
-    fn test_0xa9_lda_zero_flag() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0x00, 0x00]);
-
-        assert_eq!(cpu.status & 0b0000_0010, 0b10);
-    }
+    use crate::status::Flag;
 
     #[test]
     fn test_lda() {
@@ -324,8 +297,8 @@ mod test_opcodes {
         cpu.lda(&AddressingMode::Immediate);
 
         assert_eq!(cpu.register_a, 0x12);
-        assert_eq!(cpu.status & 0b0000_0010, 0b00);
-        assert_eq!(cpu.status & 0b1000_0000, 0);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
     }
 
     #[test]

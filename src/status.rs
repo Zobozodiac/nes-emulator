@@ -34,7 +34,7 @@ impl Status {
         }
     }
 
-    pub fn write_flag(&mut self, flag: Flag, value: bool) {
+    pub fn set_flag(&mut self, flag: Flag, value: bool) {
         match flag {
             Flag::Negative => {
                 self.negative = value;
@@ -61,6 +61,16 @@ impl Status {
                 self.carry = value;
             }
         };
+    }
+
+    /// Helper function to set the negative value based on the first bit of a byte.
+    pub fn set_negative_flag(&mut self, value: u8) {
+        self.set_flag(Flag::Negative, (value & 0b1000_0000) != 0);
+    }
+
+    /// Helper function to set the zero flag based on if a byte is zero or not.
+    pub fn set_zero_flag(&mut self, value: u8) {
+        self.set_flag(Flag::Zero, value == 0);
     }
 
     pub fn read_flag(&mut self, flag: Flag) -> bool {
@@ -95,9 +105,9 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_write_flag() {
+    fn test_set_flag() {
         let mut status = Status::new();
-        status.write_flag(Flag::Negative, true);
+        status.set_flag(Flag::Negative, true);
 
         assert_eq!(status.negative, true);
     }
@@ -105,7 +115,7 @@ mod test {
     #[test]
     fn test_read_flag() {
         let mut status = Status::new();
-        status.write_flag(Flag::Negative, true);
+        status.set_flag(Flag::Negative, true);
 
         let negative = status.read_flag(Flag::Negative);
 
@@ -113,12 +123,28 @@ mod test {
     }
 
     #[test]
+    fn test_set_negative_flag() {
+        let mut status = Status::new();
+        status.set_negative_flag(0b1000_0000);
+
+        assert_eq!(status.negative, true);
+    }
+
+    #[test]
+    fn test_set_zero_flag() {
+        let mut status = Status::new();
+        status.set_zero_flag(0b0000_0000);
+
+        assert_eq!(status.zero, true);
+    }
+
+    #[test]
     fn test_get_status_byte() {
         let mut status = Status::new();
-        status.write_flag(Flag::Negative, true);
-        status.write_flag(Flag::Overflow, true);
-        status.write_flag(Flag::Interrupt, true);
-        status.write_flag(Flag::Carry, true);
+        status.set_flag(Flag::Negative, true);
+        status.set_flag(Flag::Overflow, true);
+        status.set_flag(Flag::Interrupt, true);
+        status.set_flag(Flag::Carry, true);
 
         let status_byte = status.get_status_byte();
 
