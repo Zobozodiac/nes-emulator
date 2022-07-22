@@ -95,9 +95,7 @@ impl CPU {
                 let address = self.memory.mem_read_u16(base);
                 address.wrapping_add(self.register_y as u16)
             }
-            AddressingMode::Relative => {
-                self.program_counter
-            }
+            AddressingMode::Relative => self.program_counter,
             _ => {
                 panic!("mode does not support getting an address");
             }
@@ -112,7 +110,7 @@ impl CPU {
             AddressingMode::Implied => {
                 panic!("mode Implied does not have a value");
             }
-            _ => ()
+            _ => (),
         };
 
         let address = self.get_operand_address(mode);
@@ -172,7 +170,7 @@ impl CPU {
 
         self.register_a = lo;
 
-        self.status.set_zero_flag(lo);  // TODO need to check if this is correct and not based on result (rather than lo)
+        self.status.set_zero_flag(lo); // TODO need to check if this is correct and not based on result (rather than lo)
         self.status.set_negative_flag(lo);
         self.status.set_flag(Flag::Carry, hi > 0);
     }
