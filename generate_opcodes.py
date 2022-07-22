@@ -450,7 +450,7 @@ def convert_address_mode(address_mode):
         address_mode = "AddressingMode::Immediate"
 
     elif (address_mode == "impl") or (address_mode == "implied"):
-        address_mode = "AddressingMode::NoneAddressing"
+        address_mode = "AddressingMode::Implied"
 
     elif (address_mode == "ind") or (address_mode == "indirect"):
         address_mode = "AddressingMode::Indirect"
@@ -471,10 +471,10 @@ def convert_address_mode(address_mode):
         address_mode = "AddressingMode::ZeroPageY"
 
     elif (address_mode == "rel") or (address_mode == "relative"):
-        address_mode = "AddressingMode::Immediate"
+        address_mode = "AddressingMode::Relative"
 
     elif (address_mode == "A") or (address_mode == "accumulator"):
-        address_mode = "AddressingMode::NoneAddressing"
+        address_mode = "AddressingMode::Accumulator"
 
     return address_mode
 

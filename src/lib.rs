@@ -95,13 +95,26 @@ impl CPU {
                 let address = self.memory.mem_read_u16(base);
                 address.wrapping_add(self.register_y as u16)
             }
-            AddressingMode::NoneAddressing => {
-                panic!("mode NoneAddressing is not supported");
+            AddressingMode::Relative => {
+                self.program_counter
+            }
+            _ => {
+                panic!("mode does not support getting an address");
             }
         }
     }
 
     fn get_operand_address_value(&mut self, mode: &AddressingMode) -> u8 {
+        match mode {
+            AddressingMode::Accumulator => {
+                return self.register_a;
+            }
+            AddressingMode::Implied => {
+                panic!("mode Implied does not have a value");
+            }
+            _ => ()
+        };
+
         let address = self.get_operand_address(mode);
         let value = self.memory.mem_read(address);
 
@@ -133,6 +146,35 @@ impl CPU {
         self.status.set_negative_flag(lo);
         self.status.set_flag(Flag::Carry, hi > 0);
         self.status.set_flag(Flag::Overflow, overflow);
+    }
+
+    /// Bitwise AND with a value and the Accumulator
+    fn and(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let result = self.register_a & value;
+
+        self.register_a = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Shift left one bit, either the accumulator or a value
+    fn asl(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let result = (value as u16) << 1;
+
+        println!("result: {}", result);
+
+        let [lo, hi] = u16::to_le_bytes(result);
+
+        self.register_a = lo;
+
+        self.status.set_zero_flag(lo);  // TODO need to check if this is correct and not based on result (rather than lo)
+        self.status.set_negative_flag(lo);
+        self.status.set_flag(Flag::Carry, hi > 0);
     }
 
     /// Load Accumulator
@@ -192,6 +234,15 @@ impl CPU {
             };
 
             match *name {
+                "ADC" => {
+                    self.adc(mode);
+                }
+                "AND" => {
+                    self.and(mode);
+                }
+                "ASL" => {
+                    self.asl(mode);
+                }
                 "BRK" => {
                     return;
                 }
@@ -400,6 +451,45 @@ mod test_opcodes {
         assert_eq!(cpu.status.read_flag(Flag::Negative), false);
         assert_eq!(cpu.status.read_flag(Flag::Carry), true);
         assert_eq!(cpu.status.read_flag(Flag::Overflow), true);
+    }
+
+    #[test]
+    fn test_and() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b1000_1010;
+        cpu.memory.mem_write(0x0000, 0b0000_0010);
+
+        cpu.and(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0b0000_0010);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+    }
+
+    #[test]
+    fn test_asl() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0b0000_0001);
+
+        cpu.asl(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0b0000_0010);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), false);
+    }
+
+    #[test]
+    fn test_asl_accumulator() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b0000_0001;
+
+        cpu.asl(&AddressingMode::Accumulator);
+
+        assert_eq!(cpu.register_a, 0b0000_0010);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), false);
     }
 
     #[test]
