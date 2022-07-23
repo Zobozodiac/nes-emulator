@@ -200,7 +200,7 @@ impl CPU {
         let carry = self.status.read_flag(Flag::Carry);
 
         if carry {
-            return ();
+            return;
         }
 
         self.move_pointer_on_branch(mode);
@@ -211,7 +211,7 @@ impl CPU {
         let carry = self.status.read_flag(Flag::Carry);
 
         if !carry {
-            return ();
+            return;
         }
 
         self.move_pointer_on_branch(mode);
@@ -222,7 +222,7 @@ impl CPU {
         let zero = self.status.read_flag(Flag::Zero);
 
         if !zero {
-            return ();
+            return;
         }
 
         self.move_pointer_on_branch(mode);
@@ -237,8 +237,10 @@ impl CPU {
 
         let and_result = self.register_a & value;
 
-        self.status.set_flag(Flag::Negative, (value & 0b1000_0000) > 0);
-        self.status.set_flag(Flag::Overflow, (value & 0b0100_0000) > 0);
+        self.status
+            .set_flag(Flag::Negative, (value & 0b1000_0000) > 0);
+        self.status
+            .set_flag(Flag::Overflow, (value & 0b0100_0000) > 0);
         self.status.set_flag(Flag::Zero, and_result == 0);
     }
 
@@ -247,7 +249,7 @@ impl CPU {
         let negative = self.status.read_flag(Flag::Negative);
 
         if !negative {
-            return ();
+            return;
         }
 
         self.move_pointer_on_branch(mode);
@@ -258,7 +260,7 @@ impl CPU {
         let zero = self.status.read_flag(Flag::Zero);
 
         if zero {
-            return ();
+            return;
         }
 
         self.move_pointer_on_branch(mode);
@@ -269,10 +271,14 @@ impl CPU {
         let negative = self.status.read_flag(Flag::Negative);
 
         if negative {
-            return ();
+            return;
         }
 
         self.move_pointer_on_branch(mode);
+    }
+
+    fn brk(&self) {
+        return;
     }
 
     /// Load Accumulator
@@ -363,7 +369,7 @@ impl CPU {
                     self.bpl(mode);
                 }
                 "BRK" => {
-                    return;
+                    self.brk();
                 }
                 "LDA" => {
                     self.lda(mode);
