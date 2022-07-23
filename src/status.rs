@@ -73,7 +73,7 @@ impl Status {
         self.set_flag(Flag::Zero, value == 0);
     }
 
-    pub fn read_flag(&mut self, flag: Flag) -> bool {
+    pub fn read_flag(&self, flag: Flag) -> bool {
         match flag {
             Flag::Negative => self.negative,
             Flag::Overflow => self.overflow,

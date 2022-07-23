@@ -119,6 +119,26 @@ impl CPU {
         value
     }
 
+    fn move_pointer_on_branch(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        // Signed value to know which direction the relative change is
+        let signed_value = value as i8;
+
+        // We now convert the signed value into an unsigned u16. We needed to do this rather than
+        // converting straight to u16 because for instance -1 would be 1111_1111 in u8, but
+        // 1111_1111_1111_1111 in u16.
+        let unsigned_u16: u16 = signed_value as u16;
+
+        let current_pointer = self.program_counter;
+
+        // This I find slightly unintuitive, but because the negative numbers are larger in binary
+        // (as the first digit is 1) then the wrapping means it does actually work correctly.
+        let result = current_pointer.wrapping_add(unsigned_u16);
+
+        self.program_counter = result;
+    }
+
     /// Add a value and the Accumulator together with a Carry.
     ///
     /// Setting overflow is the hardest thing here, but essentially the 8th bit encodes if a number
@@ -175,6 +195,39 @@ impl CPU {
         self.status.set_flag(Flag::Carry, hi > 0);
     }
 
+    /// Branch when the Carry flag = 0 (Carry clear)
+    fn bcc(&mut self, mode: &AddressingMode) {
+        let carry = self.status.read_flag(Flag::Carry);
+
+        if carry {
+            return ();
+        }
+
+        self.move_pointer_on_branch(mode);
+    }
+
+    /// Branch when the Carry flag = 1 (Carry set)
+    fn bcs(&mut self, mode: &AddressingMode) {
+        let carry = self.status.read_flag(Flag::Carry);
+
+        if !carry {
+            return ();
+        }
+
+        self.move_pointer_on_branch(mode);
+    }
+
+    /// Branch when the Carry flag = 1 (Carry set)
+    fn beq(&mut self, mode: &AddressingMode) {
+        let zero = self.status.read_flag(Flag::Zero);
+
+        if !zero {
+            return ();
+        }
+
+        self.move_pointer_on_branch(mode);
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -223,7 +276,7 @@ impl CPU {
 
             let OpCode {
                 name,
-                cycles,
+                bytes,
                 address_mode: mode,
                 ..
             } = match opcode {
@@ -241,6 +294,15 @@ impl CPU {
                 "ASL" => {
                     self.asl(mode);
                 }
+                "BCC" => {
+                    self.bcc(mode);
+                }
+                "BCS" => {
+                    self.bcs(mode);
+                }
+                "BEQ" => {
+                    self.beq(mode);
+                }
                 "BRK" => {
                     return;
                 }
@@ -252,7 +314,7 @@ impl CPU {
                 }
             }
 
-            self.program_counter += *cycles as u16;
+            self.program_counter += (*bytes - 1) as u16;
         }
     }
 }
@@ -488,6 +550,42 @@ mod test_opcodes {
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
         assert_eq!(cpu.status.read_flag(Flag::Negative), false);
         assert_eq!(cpu.status.read_flag(Flag::Carry), false);
+    }
+
+    #[test]
+    fn test_bcc() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Carry, false);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bcc(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_bcs() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Carry, true);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bcs(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_beq() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Zero, true);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.beq(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
     }
 
     #[test]
