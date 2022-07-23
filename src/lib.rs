@@ -217,7 +217,7 @@ impl CPU {
         self.move_pointer_on_branch(mode);
     }
 
-    /// Branch when the Carry flag = 1 (Carry set)
+    /// Branch when the Zero flag = 1 (Result Zero)
     fn beq(&mut self, mode: &AddressingMode) {
         let zero = self.status.read_flag(Flag::Zero);
 
@@ -240,6 +240,39 @@ impl CPU {
         self.status.set_flag(Flag::Negative, (value & 0b1000_0000) > 0);
         self.status.set_flag(Flag::Overflow, (value & 0b0100_0000) > 0);
         self.status.set_flag(Flag::Zero, and_result == 0);
+    }
+
+    /// Branch when the Negative flag = 1 (Result Minus)
+    fn bmi(&mut self, mode: &AddressingMode) {
+        let negative = self.status.read_flag(Flag::Negative);
+
+        if !negative {
+            return ();
+        }
+
+        self.move_pointer_on_branch(mode);
+    }
+
+    /// Branch when the Zero flag = 0 (Result not Zero)
+    fn bne(&mut self, mode: &AddressingMode) {
+        let zero = self.status.read_flag(Flag::Zero);
+
+        if zero {
+            return ();
+        }
+
+        self.move_pointer_on_branch(mode);
+    }
+
+    /// Branch when the Zero flag = 0 (Result not Zero)
+    fn bpl(&mut self, mode: &AddressingMode) {
+        let negative = self.status.read_flag(Flag::Negative);
+
+        if negative {
+            return ();
+        }
+
+        self.move_pointer_on_branch(mode);
     }
 
     /// Load Accumulator
@@ -319,6 +352,15 @@ impl CPU {
                 }
                 "BIT" => {
                     self.bit(mode);
+                }
+                "BMI" => {
+                    self.bmi(mode);
+                }
+                "BNE" => {
+                    self.bne(mode);
+                }
+                "BPL" => {
+                    self.bpl(mode);
                 }
                 "BRK" => {
                     return;
@@ -618,6 +660,42 @@ mod test_opcodes {
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
         assert_eq!(cpu.status.read_flag(Flag::Negative), true);
         assert_eq!(cpu.status.read_flag(Flag::Overflow), true);
+    }
+
+    #[test]
+    fn test_bmi() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Negative, true);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bmi(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_bne() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Zero, false);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bne(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_bpl() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Negative, false);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bpl(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
     }
 
     #[test]
