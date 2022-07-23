@@ -266,7 +266,7 @@ impl CPU {
         self.move_pointer_on_branch(mode);
     }
 
-    /// Branch when the Zero flag = 0 (Result not Zero)
+    /// Branch when the Negative flag = 0 (Result Plus)
     fn bpl(&mut self, mode: &AddressingMode) {
         let negative = self.status.read_flag(Flag::Negative);
 
@@ -277,8 +277,26 @@ impl CPU {
         self.move_pointer_on_branch(mode);
     }
 
-    fn brk(&self) {
-        return;
+    /// Branch when the Overflow flag = 0 (Overflow Clear)
+    fn bvc(&mut self, mode: &AddressingMode) {
+        let overflow = self.status.read_flag(Flag::Overflow);
+
+        if overflow {
+            return;
+        }
+
+        self.move_pointer_on_branch(mode);
+    }
+
+    /// Branch when the Overflow flag = 1 (Overflow Set)
+    fn bvs(&mut self, mode: &AddressingMode) {
+        let overflow = self.status.read_flag(Flag::Overflow);
+
+        if !overflow {
+            return;
+        }
+
+        self.move_pointer_on_branch(mode);
     }
 
     /// Load Accumulator
@@ -369,7 +387,13 @@ impl CPU {
                     self.bpl(mode);
                 }
                 "BRK" => {
-                    self.brk();
+                    return;
+                }
+                "BVC" => {
+                    self.bvc(mode);
+                }
+                "BVS" => {
+                    self.bvs(mode);
                 }
                 "LDA" => {
                     self.lda(mode);
@@ -700,6 +724,30 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
         cpu.bpl(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_bvc() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Overflow, false);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bvc(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_bvs() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Overflow, true);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bvs(&AddressingMode::Relative);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
