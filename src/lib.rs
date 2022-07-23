@@ -228,6 +228,20 @@ impl CPU {
         self.move_pointer_on_branch(mode);
     }
 
+    /// Test Bits in Memory with Accumulator
+    ///
+    /// A confusing one, it sets the Negative and Overflow flag to bits 7 and 6 of the given value.
+    /// It also sets the zero flag if the result of the value AND accumulator is 0 or not.
+    fn bit(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let and_result = self.register_a & value;
+
+        self.status.set_flag(Flag::Negative, (value & 0b1000_0000) > 0);
+        self.status.set_flag(Flag::Overflow, (value & 0b0100_0000) > 0);
+        self.status.set_flag(Flag::Zero, and_result == 0);
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -302,6 +316,9 @@ impl CPU {
                 }
                 "BEQ" => {
                     self.beq(mode);
+                }
+                "BIT" => {
+                    self.bit(mode);
                 }
                 "BRK" => {
                     return;
@@ -586,6 +603,21 @@ mod test_opcodes {
         cpu.beq(&AddressingMode::Relative);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_bit() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0000;
+        cpu.register_a = 0b0100_0000;
+        cpu.memory.mem_write(0x0000, 0x01);
+        cpu.memory.mem_write(0x0001, 0b1100_0000);
+
+        cpu.bit(&AddressingMode::ZeroPage);
+
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), true);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), true);
     }
 
     #[test]
