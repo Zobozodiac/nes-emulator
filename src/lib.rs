@@ -484,6 +484,12 @@ impl CPU {
         self.program_counter = address;
     }
 
+    fn jsr(&mut self, mode: &AddressingMode) {
+        self.push_to_stack_u16(self.program_counter.wrapping_add(2));
+
+        self.jmp(mode);
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -1194,6 +1200,19 @@ mod test_opcodes {
         cpu.jmp(&AddressingMode::Absolute);
 
         assert_eq!(cpu.program_counter, 0x0200);
+    }
+
+    #[test]
+    fn test_jsr() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x0000, 0x0200);
+
+        cpu.jsr(&AddressingMode::Absolute);
+
+        let jump_program_counter = cpu.pull_from_stack_u16();
+
+        assert_eq!(cpu.program_counter, 0x0200);
+        assert_eq!(jump_program_counter, 0x0002);
     }
 
     #[test]
