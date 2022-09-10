@@ -2,6 +2,8 @@ use crate::status::Flag;
 use opcodes::{AddressingMode, OpCode};
 use std::ops::Add;
 
+// TODO the program counter will be implemented incorrectly when using brk and the jmp commands because it always will increase by 1 afterwards but it should ignore it. Need to find best place to define.
+
 pub mod memory;
 
 pub mod opcodes;
@@ -346,6 +348,22 @@ impl CPU {
         }
 
         self.move_pointer_on_branch(mode);
+    }
+
+    fn clc(&mut self) {
+        self.status.set_flag(Flag::Carry, false);
+    }
+
+    fn cld(&mut self) {
+        self.status.set_flag(Flag::Decimal, false);
+    }
+
+    fn cli(&mut self) {
+        self.status.set_flag(Flag::Interrupt, false);
+    }
+
+    fn clv(&mut self) {
+        self.status.set_flag(Flag::Overflow, false);
     }
 
     /// Load Accumulator
@@ -843,18 +861,6 @@ mod test_opcodes {
     }
 
     #[test]
-    fn test_bvc() {
-        let mut cpu = CPU::new();
-        cpu.program_counter = 0x0002;
-        cpu.status.set_flag(Flag::Overflow, false);
-        cpu.memory.mem_write(0x0002, 0b1111_1110);
-
-        cpu.bvc(&AddressingMode::Relative);
-
-        assert_eq!(cpu.program_counter, 0b0000_0000);
-    }
-
-    #[test]
     fn test_brk() {
         let mut cpu = CPU::new();
         cpu.memory.mem_write_u16(0xfffe, 0x0012);
@@ -870,6 +876,18 @@ mod test_opcodes {
     }
 
     #[test]
+    fn test_bvc() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0002;
+        cpu.status.set_flag(Flag::Overflow, false);
+        cpu.memory.mem_write(0x0002, 0b1111_1110);
+
+        cpu.bvc(&AddressingMode::Relative);
+
+        assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
     fn test_bvs() {
         let mut cpu = CPU::new();
         cpu.program_counter = 0x0002;
@@ -879,6 +897,50 @@ mod test_opcodes {
         cpu.bvs(&AddressingMode::Relative);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_clc() {
+        let mut cpu = CPU::new();
+        cpu.status.set_flag(Flag::Carry, true);
+        cpu.clc();
+
+        let carry_flag = cpu.status.read_flag(Flag::Carry);
+
+        assert_eq!(carry_flag, false);
+    }
+
+    #[test]
+    fn test_cld() {
+        let mut cpu = CPU::new();
+        cpu.status.set_flag(Flag::Decimal, true);
+        cpu.cld();
+
+        let decimal_flag = cpu.status.read_flag(Flag::Decimal);
+
+        assert_eq!(decimal_flag, false);
+    }
+
+    #[test]
+    fn test_cli() {
+        let mut cpu = CPU::new();
+        cpu.status.set_flag(Flag::Interrupt, true);
+        cpu.cli();
+
+        let interrupt_flag = cpu.status.read_flag(Flag::Interrupt);
+
+        assert_eq!(interrupt_flag, false);
+    }
+
+    #[test]
+    fn test_clv() {
+        let mut cpu = CPU::new();
+        cpu.status.set_flag(Flag::Overflow, true);
+        cpu.clv();
+
+        let overflow_flag = cpu.status.read_flag(Flag::Overflow);
+
+        assert_eq!(overflow_flag, false);
     }
 
     #[test]
