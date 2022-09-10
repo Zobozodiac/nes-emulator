@@ -443,6 +443,41 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
+    fn set_increment_flags(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(1);
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+
+        return result
+    }
+
+    fn inc(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let result = self.set_increment_flags(value);
+
+        let address = self.get_operand_address(mode);
+
+        self.memory.mem_write(address, result);
+    }
+
+    fn inx(&mut self) {
+        let value = self.register_x;
+
+        let result = self.set_increment_flags(value);
+
+        self.register_x = result;
+    }
+
+    fn iny(&mut self) {
+        let value = self.register_y;
+
+        let result = self.set_increment_flags(value);
+
+        self.register_y = result;
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -1094,6 +1129,42 @@ mod test_opcodes {
         let result = cpu.register_y;
 
         assert_eq!(result, 0x11);
+    }
+
+    #[test]
+    fn test_inc() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0x11);
+
+        cpu.inc(&AddressingMode::Immediate);
+
+        let result = cpu.memory.mem_read(0x0000);
+
+        assert_eq!(result, 0x12);
+    }
+
+    #[test]
+    fn test_inx() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x11;
+
+        cpu.inx();
+
+        let result = cpu.register_x;
+
+        assert_eq!(result, 0x12);
+    }
+
+    #[test]
+    fn test_iny() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x11;
+
+        cpu.iny();
+
+        let result = cpu.register_y;
+
+        assert_eq!(result, 0x12);
     }
 
     #[test]
