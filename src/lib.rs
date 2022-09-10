@@ -430,6 +430,19 @@ impl CPU {
         self.register_y = result;
     }
 
+    fn eor(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let accumulator = self.register_a;
+
+        let result = accumulator ^ value;
+
+        self.register_a = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -1081,6 +1094,19 @@ mod test_opcodes {
         let result = cpu.register_y;
 
         assert_eq!(result, 0x11);
+    }
+
+    #[test]
+    fn test_eor() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0b1010_1010);
+        cpu.register_a = 0b1111_0000;
+
+        cpu.eor(&AddressingMode::Immediate);
+
+        let result = cpu.register_a;
+
+        assert_eq!(result, 0b0101_1010);
     }
 
     #[test]
