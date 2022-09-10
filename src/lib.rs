@@ -478,6 +478,12 @@ impl CPU {
         self.register_y = result;
     }
 
+    fn jmp(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_address(mode);
+
+        self.program_counter = address;
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -1178,6 +1184,16 @@ mod test_opcodes {
         let result = cpu.register_a;
 
         assert_eq!(result, 0b0101_1010);
+    }
+
+    #[test]
+    fn test_jmp() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x0000, 0x0200);
+
+        cpu.jmp(&AddressingMode::Absolute);
+
+        assert_eq!(cpu.program_counter, 0x0200);
     }
 
     #[test]
