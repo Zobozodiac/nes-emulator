@@ -14,6 +14,7 @@ pub struct CPU {
     register_y: u8,
     status: status::Status,
     program_counter: u16,
+    stack_pointer: u8,
     memory: memory::Memory,
 }
 
@@ -25,6 +26,7 @@ impl CPU {
             register_y: 0,
             status: status::Status::new(),
             program_counter: 0,
+            stack_pointer: 0xff,
             memory: memory::Memory::new([0; 0xFFFF]),
         }
     }
@@ -34,6 +36,7 @@ impl CPU {
         self.register_a = 0;
         self.register_x = 0;
         self.register_y = 0;
+        self.stack_pointer = 0xff;
         self.status = status::Status::new();
 
         self.program_counter = self.memory.mem_read_u16(0xFFFC);
@@ -100,6 +103,38 @@ impl CPU {
                 panic!("mode does not support getting an address");
             }
         }
+    }
+
+    fn get_stack_address(&self) -> u16 {
+        u16::from_le_bytes([self.stack_pointer, 0x01])
+    }
+
+    fn push_to_stack(&mut self, data: u8) {
+        let stack_address  = self.get_stack_address();
+
+        self.memory.mem_write(stack_address, data);
+        self.stack_pointer = self.stack_pointer - 1;
+    }
+
+    fn push_to_stack_u16(&mut self, data: u16) {
+        let [lo, hi] = u16::to_le_bytes(data);
+
+        self.push_to_stack(hi);
+        self.push_to_stack(lo);
+    }
+
+    fn pull_from_stack(&mut self) -> u8 {
+        self.stack_pointer = self.stack_pointer + 1;
+        let stack_address  = self.get_stack_address();
+
+        return self.memory.mem_read(stack_address)
+    }
+
+    fn pull_from_stack_u16(&mut self) -> u16 {
+        let lo = self.pull_from_stack();
+        let hi = self.pull_from_stack();
+
+        return u16::from_le_bytes([lo, hi])
     }
 
     fn get_operand_address_value(&mut self, mode: &AddressingMode) -> u8 {
@@ -277,6 +312,11 @@ impl CPU {
         self.move_pointer_on_branch(mode);
     }
 
+    /// Force break
+    fn brk(&mut self, mode: &AddressingMode) {
+
+    }
+
     /// Branch when the Overflow flag = 0 (Overflow Clear)
     fn bvc(&mut self, mode: &AddressingMode) {
         let overflow = self.status.read_flag(Flag::Overflow);
@@ -405,6 +445,71 @@ impl CPU {
 
             self.program_counter += (*bytes - 1) as u16;
         }
+    }
+}
+
+#[cfg(test)]
+mod test_stack {
+    use super::*;
+
+    #[test]
+    fn test_stack_address() {
+        let cpu = CPU::new();
+
+        let address = cpu.get_stack_address();
+
+        assert_eq!(address, 0x01ff);
+    }
+
+    #[test]
+    fn test_push_to_stack() {
+        let mut cpu = CPU::new();
+
+        cpu.push_to_stack(0x12);
+
+        let stack_pointer = cpu.stack_pointer;
+
+        assert_eq!(stack_pointer, 0xfe);
+        assert_eq!(cpu.memory.mem_read(0x01ff), 0x12);
+    }
+
+    #[test]
+    fn test_push_to_stack_u16() {
+        let mut cpu = CPU::new();
+
+        cpu.push_to_stack_u16(0x1234);
+
+        let stack_pointer = cpu.stack_pointer;
+
+        assert_eq!(stack_pointer, 0xfd);
+        assert_eq!(cpu.memory.mem_read(0x01ff), 0x12);
+        assert_eq!(cpu.memory.mem_read(0x01fe), 0x34);
+    }
+
+    #[test]
+    fn test_pull_from_stack() {
+        let mut cpu = CPU::new();
+
+        cpu.push_to_stack(0x12);
+        let data = cpu.pull_from_stack();
+
+        let stack_pointer = cpu.stack_pointer;
+
+        assert_eq!(stack_pointer, 0xff);
+        assert_eq!(data, 0x12);
+    }
+
+    #[test]
+    fn test_pull_from_stack_u16() {
+        let mut cpu = CPU::new();
+
+        cpu.push_to_stack_u16(0x1234);
+        let data = cpu.pull_from_stack_u16();
+
+        let stack_pointer = cpu.stack_pointer;
+
+        assert_eq!(stack_pointer, 0xff);
+        assert_eq!(data, 0x1234);
     }
 }
 
