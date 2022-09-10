@@ -366,6 +366,35 @@ impl CPU {
         self.status.set_flag(Flag::Overflow, false);
     }
 
+    fn compare_memory(&mut self, value: u8, mode: &AddressingMode) {
+        let memory_value = self.get_operand_address_value(mode);
+
+        let inverse_memory_value = (!memory_value as u16).wrapping_add(1);
+
+        let result = inverse_memory_value.wrapping_add(value as u16);
+
+        let [lo, hi] = u16::to_le_bytes(result);
+
+        self.status.set_zero_flag(lo);
+        self.status.set_negative_flag(lo);
+        self.status.set_flag(Flag::Carry, hi > 0);
+    }
+
+    fn cmp(&mut self, mode: &AddressingMode) {
+        let accumulator = self.register_a;
+        self.compare_memory(accumulator, mode);
+    }
+
+    fn cpx(&mut self, mode: &AddressingMode) {
+        let accumulator = self.register_x;
+        self.compare_memory(accumulator, mode);
+    }
+
+    fn cpy(&mut self, mode: &AddressingMode) {
+        let accumulator = self.register_y;
+        self.compare_memory(accumulator, mode);
+    }
+
     /// Load Accumulator
     fn lda(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
@@ -657,7 +686,6 @@ mod test_address_modes {
 #[cfg(test)]
 mod test_opcodes {
     use super::*;
-    use crate::status::Flag;
 
     #[test]
     fn test_adc() {
@@ -941,6 +969,47 @@ mod test_opcodes {
         let overflow_flag = cpu.status.read_flag(Flag::Overflow);
 
         assert_eq!(overflow_flag, false);
+    }
+
+    #[test]
+    fn test_cmp_negative() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0b0100_0000);
+        cpu.register_a = 0b1100_0000;
+
+        cpu.cmp(&AddressingMode::Immediate);
+
+        let negative_flag = cpu.status.read_flag(Flag::Negative);
+
+        assert_eq!(negative_flag, true);
+    }
+
+    #[test]
+    fn test_cmp_zero() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0b0100_0000);
+        cpu.register_a = 0b0100_0000;
+
+        cpu.cmp(&AddressingMode::Immediate);
+
+        let zero_flag = cpu.status.read_flag(Flag::Zero);
+
+        assert_eq!(zero_flag, true);
+    }
+
+    #[test]
+    fn test_cmp_carry() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0b1000_0000);
+        cpu.register_a = 0b1000_0000;
+
+        cpu.cmp(&AddressingMode::Immediate);
+
+        let zero_flag = cpu.status.read_flag(Flag::Zero);
+        let carry_flag = cpu.status.read_flag(Flag::Carry);
+
+        assert_eq!(zero_flag, true);
+        assert_eq!(carry_flag, true);
     }
 
     #[test]
