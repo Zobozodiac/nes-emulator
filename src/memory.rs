@@ -1,11 +1,11 @@
 /// A memory object with read and write operations. Stores an array of 0xFFFF bytes.
 pub struct Memory {
-    storage: [u8; 0xFFFF],
+    storage: [u8; 0xffff + 1],
 }
 
 impl Memory {
-    pub fn new(storage: [u8; 0xFFFF]) -> Self {
-        Memory { storage }
+    pub fn new() -> Self {
+        Memory { storage: [0; 0xffff + 1] }
     }
 
     /// Read a single byte from the memory
@@ -15,7 +15,7 @@ impl Memory {
     /// ```
     /// use nes_emulator::memory::Memory;
     ///
-    /// let mut memory = Memory::new([0; 0xFFFF]);
+    /// let mut memory = Memory::new();
     /// memory.mem_write(0x0001, 0x12)
     /// ```
     pub fn mem_write(&mut self, address: u16, data: u8) {
@@ -50,7 +50,7 @@ mod test {
 
     #[test]
     fn test_mem_write() {
-        let mut memory = Memory::new([0; 0xFFFF]);
+        let mut memory = Memory::new();
         memory.mem_write(0x0000, 0x12);
 
         assert_eq!(memory.storage[0x0000], 0x12);
@@ -58,7 +58,7 @@ mod test {
 
     #[test]
     fn test_mem_write_u16() {
-        let mut memory = Memory::new([0; 0xFFFF]);
+        let mut memory = Memory::new();
         memory.mem_write_u16(0x0000, 0x1234);
 
         assert_eq!(memory.storage[0x0000], 0x34);
@@ -67,7 +67,7 @@ mod test {
 
     #[test]
     fn test_mem_read() {
-        let mut memory = Memory::new([0; 0xFFFF]);
+        let mut memory = Memory::new();
         memory.mem_write(0x0000, 0x12);
 
         assert_eq!(memory.mem_read(0x0000), 0x12);
@@ -75,7 +75,7 @@ mod test {
 
     #[test]
     fn test_mem_read_u16() {
-        let mut memory = Memory::new([0; 0xFFFF]);
+        let mut memory = Memory::new();
         memory.mem_write_u16(0x0000, 0x1234);
 
         assert_eq!(memory.mem_read_u16(0x0000), 0x1234);
@@ -83,7 +83,7 @@ mod test {
 
     #[test]
     fn test_mem_load_program() {
-        let mut memory = Memory::new([0; 0xFFFF]);
+        let mut memory = Memory::new();
         let program = vec![0xa9];
         memory.load_program(program);
 

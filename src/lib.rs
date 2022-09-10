@@ -27,7 +27,7 @@ impl CPU {
             status: status::Status::new(),
             program_counter: 0,
             stack_pointer: 0xff,
-            memory: memory::Memory::new([0; 0xFFFF]),
+            memory: memory::Memory::new(),
         }
     }
 
@@ -39,7 +39,7 @@ impl CPU {
         self.stack_pointer = 0xff;
         self.status = status::Status::new();
 
-        self.program_counter = self.memory.mem_read_u16(0xFFFC);
+        self.program_counter = self.memory.mem_read_u16(0xfffc);
     }
 
     /// We get the address in the memory that the address mode refers to.
@@ -313,8 +313,17 @@ impl CPU {
     }
 
     /// Force break
-    fn brk(&mut self, mode: &AddressingMode) {
+    fn brk(&mut self) {
+        self.push_to_stack_u16(self.program_counter + 2);
 
+        let break_flag = self.status.read_flag(Flag::Break);
+
+        self.status.set_flag(Flag::Break, true);
+        self.push_to_stack(self.status.get_status_byte());
+
+        self.status.set_flag(Flag::Break, break_flag);
+
+        self.program_counter = self.memory.mem_read_u16(0xfffe)
     }
 
     /// Branch when the Overflow flag = 0 (Overflow Clear)
@@ -843,6 +852,21 @@ mod test_opcodes {
         cpu.bvc(&AddressingMode::Relative);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
+    }
+
+    #[test]
+    fn test_brk() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0xfffe, 0x0012);
+
+        cpu.brk();
+
+        let status = cpu.pull_from_stack();
+        let program_counter = cpu.pull_from_stack_u16();
+
+        assert_eq!(status, 0b0001_0000);
+        assert_eq!(program_counter, 0x0002);
+        assert_eq!(cpu.program_counter, 0x0012);
     }
 
     #[test]
