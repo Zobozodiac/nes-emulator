@@ -500,6 +500,26 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
+    /// Load Accumulator
+    fn ldx(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        self.register_x = value;
+        let result = self.register_x;
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Load Accumulator
+    fn ldy(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        self.register_y = value;
+        let result = self.register_y;
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
@@ -1223,6 +1243,30 @@ mod test_opcodes {
         cpu.lda(&AddressingMode::Immediate);
 
         assert_eq!(cpu.register_a, 0x12);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+    }
+
+    #[test]
+    fn test_ldx() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0x12);
+
+        cpu.ldx(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_x, 0x12);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+    }
+
+    #[test]
+    fn test_ldy() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0x12);
+
+        cpu.ldy(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_y, 0x12);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
         assert_eq!(cpu.status.read_flag(Flag::Negative), false);
     }
