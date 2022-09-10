@@ -366,7 +366,7 @@ impl CPU {
         self.status.set_flag(Flag::Overflow, false);
     }
 
-    fn compare_memory(&mut self, value: u8, mode: &AddressingMode) {
+    fn compare_to_memory(&mut self, value: u8, mode: &AddressingMode) {
         let memory_value = self.get_operand_address_value(mode);
 
         let inverse_memory_value = (!memory_value as u16).wrapping_add(1);
@@ -382,17 +382,52 @@ impl CPU {
 
     fn cmp(&mut self, mode: &AddressingMode) {
         let accumulator = self.register_a;
-        self.compare_memory(accumulator, mode);
+        self.compare_to_memory(accumulator, mode);
     }
 
     fn cpx(&mut self, mode: &AddressingMode) {
         let accumulator = self.register_x;
-        self.compare_memory(accumulator, mode);
+        self.compare_to_memory(accumulator, mode);
     }
 
     fn cpy(&mut self, mode: &AddressingMode) {
         let accumulator = self.register_y;
-        self.compare_memory(accumulator, mode);
+        self.compare_to_memory(accumulator, mode);
+    }
+
+    fn set_decrement_flags(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(0b1111_1111);
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+
+        return result
+    }
+
+    fn dec(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let result = self.set_decrement_flags(value);
+
+        let address = self.get_operand_address(mode);
+
+        self.memory.mem_write(address, result);
+    }
+
+    fn dex(&mut self) {
+        let value = self.register_x;
+
+        let result = self.set_decrement_flags(value);
+
+        self.register_x = result;
+    }
+
+    fn dey(&mut self) {
+        let value = self.register_y;
+
+        let result = self.set_decrement_flags(value);
+
+        self.register_y = result;
     }
 
     /// Load Accumulator
@@ -1010,6 +1045,42 @@ mod test_opcodes {
 
         assert_eq!(zero_flag, true);
         assert_eq!(carry_flag, true);
+    }
+
+    #[test]
+    fn test_dec() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write(0x0000, 0x12);
+
+        cpu.dec(&AddressingMode::Immediate);
+
+        let result = cpu.memory.mem_read(0x0000);
+
+        assert_eq!(result, 0x11);
+    }
+
+    #[test]
+    fn test_dex() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x12;
+
+        cpu.dex();
+
+        let result = cpu.register_x;
+
+        assert_eq!(result, 0x11);
+    }
+
+    #[test]
+    fn test_dey() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x12;
+
+        cpu.dey();
+
+        let result = cpu.register_y;
+
+        assert_eq!(result, 0x11);
     }
 
     #[test]
