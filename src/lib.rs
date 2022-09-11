@@ -639,6 +639,20 @@ impl CPU {
         self.status.set_flag(Flag::Carry, carry_flag > 0);
     }
 
+    fn rti(&mut self) {
+        self.plp();
+
+        let program_counter = self.pull_from_stack_u16();
+
+        self.program_counter = program_counter;
+    }
+
+    fn rts(&mut self) {
+        let program_counter = self.pull_from_stack_u16().wrapping_add(1);
+
+        self.program_counter = program_counter
+    }
+
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
@@ -1476,5 +1490,27 @@ mod test_opcodes {
 
         assert_eq!(cpu.register_a, 0b1011_1000);
         assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+    }
+
+    #[test]
+    fn test_rti() {
+        let mut cpu = CPU::new();
+        cpu.push_to_stack_u16(0x1234);
+        cpu.push_to_stack(0b0000_0011);
+
+        cpu.rti();
+
+        assert_eq!(cpu.status.get_status_byte(), 0b0000_0011);
+        assert_eq!(cpu.program_counter, 0x1234);
+    }
+
+    #[test]
+    fn test_rts() {
+        let mut cpu = CPU::new();
+        cpu.push_to_stack_u16(0x1234);
+
+        cpu.rts();
+
+        assert_eq!(cpu.program_counter, 0x1235);
     }
 }
