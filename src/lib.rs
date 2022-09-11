@@ -697,8 +697,30 @@ impl CPU {
 
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
-        self.register_x = self.register_a;
-        let result = self.register_x;
+        let result = self.register_a;
+
+        self.register_x = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Transfer Accumulator to Index Y
+    fn tay(&mut self) {
+        let result = self.register_a;
+
+        self.register_y = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Transfer Accumulator to Index Y
+    fn tsx(&mut self) {
+        let result = self.stack_pointer;
+
+        self.register_x = result;
+
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
     }
@@ -1630,5 +1652,37 @@ mod test_opcodes {
         cpu.sty(&AddressingMode::Absolute);
 
         assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
+    }
+
+
+    #[test]
+    fn test_tax() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x01;
+
+        cpu.tax();
+
+        assert_eq!(cpu.register_x, 0x01);
+    }
+
+
+    #[test]
+    fn test_tay() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x01;
+
+        cpu.tay();
+
+        assert_eq!(cpu.register_y, 0x01);
+    }
+
+
+    #[test]
+    fn test_tsx() {
+        let mut cpu = CPU::new();
+
+        cpu.tsx();
+
+        assert_eq!(cpu.register_x, 0xff);
     }
 }
