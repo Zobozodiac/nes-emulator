@@ -665,6 +665,18 @@ impl CPU {
         self.addition_with_register_a(value as u16);
     }
 
+    fn sec(&mut self) {
+        self.status.set_flag(Flag::Carry, true);
+    }
+
+    fn sed(&mut self) {
+        self.status.set_flag(Flag::Decimal, true);
+    }
+
+    fn sei(&mut self) {
+        self.status.set_flag(Flag::Interrupt, true);
+    }
+
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
@@ -1540,5 +1552,32 @@ mod test_opcodes {
         assert_eq!(cpu.status.read_flag(Flag::Negative), false);
         assert_eq!(cpu.status.read_flag(Flag::Carry), true);
         assert_eq!(cpu.status.read_flag(Flag::Overflow), false);
+    }
+
+    #[test]
+    fn test_sec() {
+        let mut cpu = CPU::new();
+
+        cpu.sec();
+
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+    }
+
+    #[test]
+    fn test_sed() {
+        let mut cpu = CPU::new();
+
+        cpu.sed();
+
+        assert_eq!(cpu.status.read_flag(Flag::Decimal), true);
+    }
+
+    #[test]
+    fn test_sei() {
+        let mut cpu = CPU::new();
+
+        cpu.sei();
+
+        assert_eq!(cpu.status.read_flag(Flag::Interrupt), true);
     }
 }
