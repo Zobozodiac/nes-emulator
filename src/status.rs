@@ -98,6 +98,26 @@ impl Status {
 
         negative | overflow | ignored | break_flag | decimal | interrupt | zero | carry
     }
+
+    pub fn set_from_byte(&mut self, value: u8) {
+        let negative_flag = value & 0b1000_0000;
+        let overflow_flag = value & 0b0100_0000;
+        let ignored_flag = value & 0b0010_0000;
+        let break_flag = value & 0b0001_0000;
+        let decimal_flag = value & 0b0000_1000;
+        let interrupt_flag = value & 0b0000_0100;
+        let zero_flag = value & 0b0000_0010;
+        let carry_flag = value & 0b0000_0001;
+
+        self.set_flag(Flag::Negative, negative_flag > 0);
+        self.set_flag(Flag::Overflow, overflow_flag > 0);
+        self.set_flag(Flag::Ignored, ignored_flag > 0);
+        self.set_flag(Flag::Break, break_flag > 0);
+        self.set_flag(Flag::Decimal, decimal_flag > 0);
+        self.set_flag(Flag::Interrupt, interrupt_flag > 0);
+        self.set_flag(Flag::Zero, zero_flag > 0);
+        self.set_flag(Flag::Carry, carry_flag > 0);
+    }
 }
 
 #[cfg(test)]

@@ -556,6 +556,45 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
+    fn pha(&mut self) {
+        self.push_to_stack(self.register_a)
+    }
+
+    fn php(&mut self) {
+        let break_flag = self.status.read_flag(Flag::Break);
+        let ignored_flag = self.status.read_flag(Flag::Ignored);
+
+        self.status.set_flag(Flag::Break, true);
+        self.status.set_flag(Flag::Ignored, true);
+        let status = self.status.get_status_byte();
+
+        self.push_to_stack(status);
+
+        self.status.set_flag(Flag::Break, break_flag);
+        self.status.set_flag(Flag::Ignored, ignored_flag);
+    }
+
+    fn pla(&mut self) {
+        let result = self.pull_from_stack();
+
+        self.register_a = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    fn plp(&mut self) {
+        let break_flag = self.status.read_flag(Flag::Break);
+        let ignored_flag = self.status.read_flag(Flag::Ignored);
+
+        let result = self.pull_from_stack();
+
+        self.status.set_from_byte(result);
+
+        self.status.set_flag(Flag::Break, break_flag);
+        self.status.set_flag(Flag::Ignored, ignored_flag);
+    }
+
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
@@ -1320,5 +1359,54 @@ mod test_opcodes {
         assert_eq!(cpu.register_a, 0b0000_0011);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
         assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+    }
+
+    #[test]
+    fn test_pha() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x12;
+
+        cpu.pha();
+
+        let stack_value = cpu.pull_from_stack();
+
+        assert_eq!(stack_value, 0x12);
+    }
+
+    #[test]
+    fn test_php() {
+        let mut cpu = CPU::new();
+        cpu.status.set_flag(Flag::Zero, true);
+
+        let status = cpu.status.get_status_byte();
+
+        cpu.php();
+
+        let stack_value = cpu.pull_from_stack();
+
+        assert_eq!(cpu.status.get_status_byte(), status);
+        assert_eq!(stack_value, 0b0011_0010)
+    }
+
+    #[test]
+    fn test_pla() {
+        let mut cpu = CPU::new();
+        cpu.push_to_stack(0x12);
+
+        cpu.pla();
+
+        assert_eq!(cpu.register_a, 0x12);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+    }
+
+    #[test]
+    fn test_plp() {
+        let mut cpu = CPU::new();
+        cpu.push_to_stack(0b0011_0010);
+
+        cpu.plp();
+
+        assert_eq!(cpu.status.get_status_byte(), 0b0000_0010);
     }
 }
