@@ -500,7 +500,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    /// Load Accumulator
+    /// Load X register
     fn ldx(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
 
@@ -510,7 +510,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    /// Load Accumulator
+    /// Load Y register
     fn ldy(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
 
@@ -518,6 +518,27 @@ impl CPU {
         let result = self.register_y;
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+    }
+
+    fn lsr(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let carry_flag = value & 0b0000_0001;
+        let result = value >> 1;
+
+        match mode {
+            AddressingMode::Accumulator => {
+                self.register_a = result;
+            }
+            _ => {
+                let address = self.get_operand_address(mode);
+
+                self.memory.mem_write(address, result);
+            }
+        }
+
+        self.status.set_zero_flag(result);
+        self.status.set_flag(Flag::Carry, carry_flag > 0);
     }
 
     /// Transfer Accumulator to Index X
@@ -1269,6 +1290,18 @@ mod test_opcodes {
         assert_eq!(cpu.register_y, 0x12);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
         assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+    }
+
+    #[test]
+    fn test_lsr() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b0000_1111;
+
+        cpu.lsr(&AddressingMode::Accumulator);
+
+        assert_eq!(cpu.register_a, 0b0000_0111);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
     }
 
     #[test]
