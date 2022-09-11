@@ -677,6 +677,24 @@ impl CPU {
         self.status.set_flag(Flag::Interrupt, true);
     }
 
+    fn sta(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_address(mode);
+
+        self.memory.mem_write(address, self.register_a);
+    }
+
+    fn stx(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_address(mode);
+
+        self.memory.mem_write(address, self.register_x);
+    }
+
+    fn sty(&mut self, mode: &AddressingMode) {
+        let address = self.get_operand_address(mode);
+
+        self.memory.mem_write(address, self.register_y);
+    }
+
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
@@ -1579,5 +1597,38 @@ mod test_opcodes {
         cpu.sei();
 
         assert_eq!(cpu.status.read_flag(Flag::Interrupt), true);
+    }
+
+    #[test]
+    fn test_sta() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x0000, 0x1234);
+        cpu.register_a = 0x01;
+
+        cpu.sta(&AddressingMode::Absolute);
+
+        assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
+    }
+
+    #[test]
+    fn test_stx() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x0000, 0x1234);
+        cpu.register_x = 0x01;
+
+        cpu.stx(&AddressingMode::Absolute);
+
+        assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
+    }
+
+    #[test]
+    fn test_sty() {
+        let mut cpu = CPU::new();
+        cpu.memory.mem_write_u16(0x0000, 0x1234);
+        cpu.register_y = 0x01;
+
+        cpu.sty(&AddressingMode::Absolute);
+
+        assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
     }
 }
