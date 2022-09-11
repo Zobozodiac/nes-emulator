@@ -541,20 +541,25 @@ impl CPU {
         self.status.set_flag(Flag::Carry, carry_flag > 0);
     }
 
-    /// Transfer Accumulator to Index X
-    fn tax(&mut self) {
-        self.register_x = self.register_a;
-        let result = self.register_x;
-        self.status.set_zero_flag(result);
-        self.status.set_negative_flag(result);
+    fn nop(&mut self) {
+
     }
 
     /// Bitwise OR with a value and the Accumulator
     fn ora(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
 
-        self.register_a = self.register_a | value;
-        let result = self.register_a;
+        let result = self.register_a | value;
+
+        self.register_a = result;
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Transfer Accumulator to Index X
+    fn tax(&mut self) {
+        self.register_x = self.register_a;
+        let result = self.register_x;
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
     }
@@ -1313,5 +1318,7 @@ mod test_opcodes {
         cpu.ora(&AddressingMode::Immediate);
 
         assert_eq!(cpu.register_a, 0b0000_0011);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
     }
 }
