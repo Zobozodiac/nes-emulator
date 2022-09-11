@@ -170,4 +170,14 @@ mod test {
 
         assert_eq!(status_byte, 0b1100_0101);
     }
+
+    #[test]
+    fn test_set_from_byte() {
+        let mut status = Status::new();
+        status.set_from_byte(0b0000_0011);
+
+        let status_byte = status.get_status_byte();
+
+        assert_eq!(status_byte, 0b0000_0011);
+    }
 }
