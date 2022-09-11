@@ -185,14 +185,18 @@ impl CPU {
     fn adc(&mut self, mode: &AddressingMode) {
         let value = self.get_operand_address_value(mode);
 
+        self.addition_with_register_a(value as u16);
+    }
+
+    fn addition_with_register_a(&mut self, value: u16) {
         let initial_carry = self.status.read_flag(Flag::Carry) as u8;
         let result = (self.register_a as u16)
-            .add(value as u16)
+            .add(value)
             .add(initial_carry as u16);
 
         let [lo, hi] = u16::to_le_bytes(result);
 
-        let overflow = ((self.register_a ^ lo) & (value ^ lo) & 0b1000_0000) > 0;
+        let overflow = ((self.register_a ^ lo) & ((value as u8) ^ lo) & 0b1000_0000) > 0;
 
         // Set the result in the accumulator
         self.register_a = lo;
@@ -651,6 +655,14 @@ impl CPU {
         let program_counter = self.pull_from_stack_u16().wrapping_add(1);
 
         self.program_counter = program_counter
+    }
+
+    fn sbc(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let value = !value;
+
+        self.addition_with_register_a(value as u16);
     }
 
     /// Transfer Accumulator to Index X
@@ -1512,5 +1524,21 @@ mod test_opcodes {
         cpu.rts();
 
         assert_eq!(cpu.program_counter, 0x1235);
+    }
+
+    #[test]
+    fn test_sbc() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x12;
+        cpu.memory.mem_write(0x0000, 0x08);
+        cpu.status.set_flag(Flag::Carry, true);
+
+        cpu.sbc(&AddressingMode::Immediate);
+
+        assert_eq!(cpu.register_a, 0x0a);
+        assert_eq!(cpu.status.read_flag(Flag::Zero), false);
+        assert_eq!(cpu.status.read_flag(Flag::Negative), false);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+        assert_eq!(cpu.status.read_flag(Flag::Overflow), false);
     }
 }
