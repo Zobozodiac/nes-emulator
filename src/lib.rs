@@ -725,6 +725,36 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
+    /// Transfer Accumulator to Index Y
+    fn txa(&mut self) {
+        let result = self.register_x;
+
+        self.register_a = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Transfer Accumulator to Index Y
+    fn txs(&mut self) {
+        let result = self.register_x;
+
+        self.stack_pointer = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
+    /// Transfer Accumulator to Index Y
+    fn tya(&mut self) {
+        let result = self.register_y;
+
+        self.register_a = result;
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+    }
+
     pub fn load_and_run(&mut self, program: Vec<u8>) {
         self.load(program);
         self.reset();
@@ -1684,5 +1714,38 @@ mod test_opcodes {
         cpu.tsx();
 
         assert_eq!(cpu.register_x, 0xff);
+    }
+
+
+    #[test]
+    fn test_txa() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x12;
+
+        cpu.txa();
+
+        assert_eq!(cpu.register_a, 0x12);
+    }
+
+
+    #[test]
+    fn test_txs() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0x12;
+
+        cpu.txs();
+
+        assert_eq!(cpu.stack_pointer, 0x12);
+    }
+
+
+    #[test]
+    fn test_tya() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x12;
+
+        cpu.tya();
+
+        assert_eq!(cpu.register_a, 0x12);
     }
 }
