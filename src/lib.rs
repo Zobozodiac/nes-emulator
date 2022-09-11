@@ -595,6 +595,50 @@ impl CPU {
         self.status.set_flag(Flag::Ignored, ignored_flag);
     }
 
+    fn rol(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let carry_flag = value & 0b1000_0000;
+        let result = (value << 1) | (self.status.read_flag(Flag::Carry) as u8);
+
+        match mode {
+            AddressingMode::Accumulator => {
+                self.register_a = result;
+            }
+            _ => {
+                let address = self.get_operand_address(mode);
+
+                self.memory.mem_write(address, result);
+            }
+        }
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+        self.status.set_flag(Flag::Carry, carry_flag > 0);
+    }
+
+    fn ror(&mut self, mode: &AddressingMode) {
+        let value = self.get_operand_address_value(mode);
+
+        let carry_flag = value & 0b0000_0001;
+        let result = (value >> 1) | ((self.status.read_flag(Flag::Carry) as u8) << 7);
+
+        match mode {
+            AddressingMode::Accumulator => {
+                self.register_a = result;
+            }
+            _ => {
+                let address = self.get_operand_address(mode);
+
+                self.memory.mem_write(address, result);
+            }
+        }
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+        self.status.set_flag(Flag::Carry, carry_flag > 0);
+    }
+
     /// Transfer Accumulator to Index X
     fn tax(&mut self) {
         self.register_x = self.register_a;
@@ -1408,5 +1452,29 @@ mod test_opcodes {
         cpu.plp();
 
         assert_eq!(cpu.status.get_status_byte(), 0b0000_0010);
+    }
+
+    #[test]
+    fn test_rol() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b1000_1110;
+        cpu.status.set_flag(Flag::Carry, true);
+
+        cpu.rol(&AddressingMode::Accumulator);
+
+        assert_eq!(cpu.register_a, 0b0001_1101);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
+    }
+
+    #[test]
+    fn test_ror() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0b0111_0001;
+        cpu.status.set_flag(Flag::Carry, true);
+
+        cpu.ror(&AddressingMode::Accumulator);
+
+        assert_eq!(cpu.register_a, 0b1011_1000);
+        assert_eq!(cpu.status.read_flag(Flag::Carry), true);
     }
 }
