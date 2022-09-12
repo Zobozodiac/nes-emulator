@@ -176,16 +176,8 @@ impl CPU {
         self.program_counter = result;
     }
 
-    /// Add a value and the Accumulator together with a Carry.
-    ///
-    /// Setting overflow is the hardest thing here, but essentially the 8th bit encodes if a number
-    /// is positive or negative. So we are comparing the result and saying if both values are
-    /// positive but the result is negative then we have overflow, and vice versa if both are
-    /// negative but the result is positive then we have overflow.
-    fn adc(&mut self, mode: &AddressingMode) {
-        let value = self.get_operand_address_value(mode);
-
-        self.addition_with_register_a(value as u16);
+    fn apply_bytes_to_program_counter(&mut self, bytes: u8) {
+        self.program_counter = self.program_counter.wrapping_add(bytes as u16);
     }
 
     fn addition_with_register_a(&mut self, value: u16) {
@@ -207,8 +199,122 @@ impl CPU {
         self.status.set_flag(Flag::Overflow, overflow);
     }
 
+    fn compare_to_memory(&mut self, value: u8, mode: &AddressingMode) {
+        let memory_value = self.get_operand_address_value(mode);
+
+        let inverse_memory_value = (!memory_value as u16).wrapping_add(1);
+
+        let result = inverse_memory_value.wrapping_add(value as u16);
+
+        let [lo, hi] = u16::to_le_bytes(result);
+
+        self.status.set_zero_flag(lo);
+        self.status.set_negative_flag(lo);
+        self.status.set_flag(Flag::Carry, hi > 0);
+    }
+
+    fn set_decrement_flags(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(0b1111_1111);
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+
+        return result
+    }
+
+    fn set_increment_flags(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(1);
+
+        self.status.set_zero_flag(result);
+        self.status.set_negative_flag(result);
+
+        return result
+    }
+
+    fn check_boundary_crossed(&mut self, address: u16, value: u8) -> bool {
+        let updated_address = address.wrapping_add(value as u16);
+
+        let [start_address_lo, start_address_hi] = u16::to_le_bytes(address);
+        let [updated_address_lo, updated_address_hi] = u16::to_le_bytes(updated_address);
+
+        let crossed_page = updated_address_hi != start_address_hi;
+        crossed_page
+    }
+
+    fn major_cycles(&mut self, mode: &AddressingMode) -> u8 {
+        match mode {
+            AddressingMode::Immediate => {
+                2
+            }
+            AddressingMode::ZeroPage => {
+                3
+            }
+            AddressingMode::ZeroPageX => {
+                4
+            }
+            AddressingMode::Absolute => {
+                4
+            }
+            AddressingMode::AbsoluteX => {
+                let address = self.memory.mem_read_u16(self.program_counter);
+
+                let crossed_page = self.check_boundary_crossed(address, self.register_x);
+
+                if crossed_page {
+                    5
+                } else {
+                    4
+                }
+            }
+            AddressingMode::AbsoluteY => {
+                let address = self.memory.mem_read_u16(self.program_counter);
+
+                let crossed_page = self.check_boundary_crossed(address, self.register_y);
+
+                if crossed_page {
+                    5
+                } else {
+                    4
+                }
+            }
+            AddressingMode::IndirectX => {
+                6
+            }
+            AddressingMode::IndirectY => {
+                let address = self.memory.mem_read(self.program_counter);
+
+                let address = self.memory.mem_read_u16(address as u16);
+
+                let crossed_page = self.check_boundary_crossed(address, self.register_y);
+
+                if crossed_page {
+                    6
+                } else {
+                    5
+                }
+            }
+            _ => {
+                panic!("Trying to calculate cycles of an unsupported mode.")
+            }
+        }
+    }
+
+    /// Add a value and the Accumulator together with a Carry.
+    ///
+    /// Setting overflow is the hardest thing here, but essentially the 8th bit encodes if a number
+    /// is positive or negative. So we are comparing the result and saying if both values are
+    /// positive but the result is negative then we have overflow, and vice versa if both are
+    /// negative but the result is positive then we have overflow.
+    fn adc(&mut self, mode: &AddressingMode, bytes: u8) {
+        let value = self.get_operand_address_value(mode);
+
+        self.addition_with_register_a(value as u16);
+
+        self.apply_bytes_to_program_counter(bytes);
+    }
+
     /// Bitwise AND with a value and the Accumulator
-    fn and(&mut self, mode: &AddressingMode) {
+    fn and(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let result = self.register_a & value;
@@ -217,10 +323,12 @@ impl CPU {
 
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     /// Shift left one bit, either the accumulator or a value
-    fn asl(&mut self, mode: &AddressingMode) {
+    fn asl(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let result = (value as u16) << 1;
@@ -234,6 +342,8 @@ impl CPU {
         self.status.set_zero_flag(lo); // TODO need to check if this is correct and not based on result (rather than lo)
         self.status.set_negative_flag(lo);
         self.status.set_flag(Flag::Carry, hi > 0);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     /// Branch when the Carry flag = 0 (Carry clear)
@@ -273,7 +383,7 @@ impl CPU {
     ///
     /// A confusing one, it sets the Negative and Overflow flag to bits 7 and 6 of the given value.
     /// It also sets the zero flag if the result of the value AND accumulator is 0 or not.
-    fn bit(&mut self, mode: &AddressingMode) {
+    fn bit(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let and_result = self.register_a & value;
@@ -283,6 +393,8 @@ impl CPU {
         self.status
             .set_flag(Flag::Overflow, (value & 0b0100_0000) > 0);
         self.status.set_flag(Flag::Zero, and_result == 0);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     /// Branch when the Negative flag = 1 (Result Minus)
@@ -370,45 +482,28 @@ impl CPU {
         self.status.set_flag(Flag::Overflow, false);
     }
 
-    fn compare_to_memory(&mut self, value: u8, mode: &AddressingMode) {
-        let memory_value = self.get_operand_address_value(mode);
-
-        let inverse_memory_value = (!memory_value as u16).wrapping_add(1);
-
-        let result = inverse_memory_value.wrapping_add(value as u16);
-
-        let [lo, hi] = u16::to_le_bytes(result);
-
-        self.status.set_zero_flag(lo);
-        self.status.set_negative_flag(lo);
-        self.status.set_flag(Flag::Carry, hi > 0);
-    }
-
-    fn cmp(&mut self, mode: &AddressingMode) {
+    fn cmp(&mut self, mode: &AddressingMode, bytes: u8) {
         let accumulator = self.register_a;
         self.compare_to_memory(accumulator, mode);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn cpx(&mut self, mode: &AddressingMode) {
+    fn cpx(&mut self, mode: &AddressingMode, bytes: u8) {
         let accumulator = self.register_x;
         self.compare_to_memory(accumulator, mode);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn cpy(&mut self, mode: &AddressingMode) {
+    fn cpy(&mut self, mode: &AddressingMode, bytes: u8) {
         let accumulator = self.register_y;
         self.compare_to_memory(accumulator, mode);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn set_decrement_flags(&mut self, value: u8) -> u8 {
-        let result = value.wrapping_add(0b1111_1111);
-
-        self.status.set_zero_flag(result);
-        self.status.set_negative_flag(result);
-
-        return result
-    }
-
-    fn dec(&mut self, mode: &AddressingMode) {
+    fn dec(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let result = self.set_decrement_flags(value);
@@ -416,6 +511,8 @@ impl CPU {
         let address = self.get_operand_address(mode);
 
         self.memory.mem_write(address, result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     fn dex(&mut self) {
@@ -434,7 +531,7 @@ impl CPU {
         self.register_y = result;
     }
 
-    fn eor(&mut self, mode: &AddressingMode) {
+    fn eor(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let accumulator = self.register_a;
@@ -445,18 +542,11 @@ impl CPU {
 
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn set_increment_flags(&mut self, value: u8) -> u8 {
-        let result = value.wrapping_add(1);
-
-        self.status.set_zero_flag(result);
-        self.status.set_negative_flag(result);
-
-        return result
-    }
-
-    fn inc(&mut self, mode: &AddressingMode) {
+    fn inc(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let result = self.set_increment_flags(value);
@@ -464,6 +554,8 @@ impl CPU {
         let address = self.get_operand_address(mode);
 
         self.memory.mem_write(address, result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     fn inx(&mut self) {
@@ -495,36 +587,42 @@ impl CPU {
     }
 
     /// Load Accumulator
-    fn lda(&mut self, mode: &AddressingMode) {
+    fn lda(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         self.register_a = value;
         let result = self.register_a;
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     /// Load X register
-    fn ldx(&mut self, mode: &AddressingMode) {
+    fn ldx(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         self.register_x = value;
         let result = self.register_x;
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     /// Load Y register
-    fn ldy(&mut self, mode: &AddressingMode) {
+    fn ldy(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         self.register_y = value;
         let result = self.register_y;
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn lsr(&mut self, mode: &AddressingMode) {
+    fn lsr(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let carry_flag = value & 0b0000_0001;
@@ -543,6 +641,8 @@ impl CPU {
 
         self.status.set_zero_flag(result);
         self.status.set_flag(Flag::Carry, carry_flag > 0);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     fn nop(&mut self) {
@@ -550,7 +650,7 @@ impl CPU {
     }
 
     /// Bitwise OR with a value and the Accumulator
-    fn ora(&mut self, mode: &AddressingMode) {
+    fn ora(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let result = self.register_a | value;
@@ -558,6 +658,8 @@ impl CPU {
         self.register_a = result;
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     fn pha(&mut self) {
@@ -599,7 +701,7 @@ impl CPU {
         self.status.set_flag(Flag::Ignored, ignored_flag);
     }
 
-    fn rol(&mut self, mode: &AddressingMode) {
+    fn rol(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let carry_flag = value & 0b1000_0000;
@@ -619,9 +721,11 @@ impl CPU {
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
         self.status.set_flag(Flag::Carry, carry_flag > 0);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn ror(&mut self, mode: &AddressingMode) {
+    fn ror(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let carry_flag = value & 0b0000_0001;
@@ -641,6 +745,8 @@ impl CPU {
         self.status.set_zero_flag(result);
         self.status.set_negative_flag(result);
         self.status.set_flag(Flag::Carry, carry_flag > 0);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     fn rti(&mut self) {
@@ -657,12 +763,14 @@ impl CPU {
         self.program_counter = program_counter
     }
 
-    fn sbc(&mut self, mode: &AddressingMode) {
+    fn sbc(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         let value = !value;
 
         self.addition_with_register_a(value as u16);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     fn sec(&mut self) {
@@ -677,22 +785,28 @@ impl CPU {
         self.status.set_flag(Flag::Interrupt, true);
     }
 
-    fn sta(&mut self, mode: &AddressingMode) {
+    fn sta(&mut self, mode: &AddressingMode, bytes: u8) {
         let address = self.get_operand_address(mode);
 
         self.memory.mem_write(address, self.register_a);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn stx(&mut self, mode: &AddressingMode) {
+    fn stx(&mut self, mode: &AddressingMode, bytes: u8) {
         let address = self.get_operand_address(mode);
 
         self.memory.mem_write(address, self.register_x);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
-    fn sty(&mut self, mode: &AddressingMode) {
+    fn sty(&mut self, mode: &AddressingMode, bytes: u8) {
         let address = self.get_operand_address(mode);
 
         self.memory.mem_write(address, self.register_y);
+
+        self.apply_bytes_to_program_counter(bytes);
     }
 
     /// Transfer Accumulator to Index X
@@ -715,7 +829,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    /// Transfer Accumulator to Index Y
+    /// Transfer Stack Pointer to Index X
     fn tsx(&mut self) {
         let result = self.stack_pointer;
 
@@ -725,7 +839,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    /// Transfer Accumulator to Index Y
+    /// Transfer Index X to Accumulator
     fn txa(&mut self) {
         let result = self.register_x;
 
@@ -735,7 +849,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    /// Transfer Accumulator to Index Y
+    /// Transfer Index X to Stack Pointer
     fn txs(&mut self) {
         let result = self.register_x;
 
@@ -745,7 +859,7 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    /// Transfer Accumulator to Index Y
+    /// Transfer Index Y to Accumulator
     fn tya(&mut self) {
         let result = self.register_y;
 
@@ -785,13 +899,13 @@ impl CPU {
 
             match *name {
                 "ADC" => {
-                    self.adc(mode);
+                    self.adc(mode, *bytes);
                 }
                 "AND" => {
-                    self.and(mode);
+                    self.and(mode, *bytes);
                 }
                 "ASL" => {
-                    self.asl(mode);
+                    self.asl(mode, *bytes);
                 }
                 "BCC" => {
                     self.bcc(mode);
@@ -803,7 +917,7 @@ impl CPU {
                     self.beq(mode);
                 }
                 "BIT" => {
-                    self.bit(mode);
+                    self.bit(mode, *bytes);
                 }
                 "BMI" => {
                     self.bmi(mode);
@@ -824,7 +938,7 @@ impl CPU {
                     self.bvs(mode);
                 }
                 "LDA" => {
-                    self.lda(mode);
+                    self.lda(mode, *bytes);
                 }
                 _ => {
                     todo!()
@@ -1025,7 +1139,7 @@ mod test_opcodes {
         cpu.register_a = 0x12;
         cpu.memory.mem_write(0x0000, 0x34);
 
-        cpu.adc(&AddressingMode::Immediate);
+        cpu.adc(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0x46);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1040,7 +1154,7 @@ mod test_opcodes {
         cpu.register_a = 0x00;
         cpu.memory.mem_write(0x0000, 0x00);
 
-        cpu.adc(&AddressingMode::Immediate);
+        cpu.adc(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0x00);
         assert_eq!(cpu.status.read_flag(Flag::Zero), true);
@@ -1055,7 +1169,7 @@ mod test_opcodes {
         cpu.register_a = 0b1000_1010;
         cpu.memory.mem_write(0x0000, 0b0000_0001);
 
-        cpu.adc(&AddressingMode::Immediate);
+        cpu.adc(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0b1000_1011);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1070,7 +1184,7 @@ mod test_opcodes {
         cpu.register_a = 0b1100_1010;
         cpu.memory.mem_write(0x0000, 0b0100_0001);
 
-        cpu.adc(&AddressingMode::Immediate);
+        cpu.adc(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0b0000_1011);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1085,7 +1199,7 @@ mod test_opcodes {
         cpu.register_a = 0b1000_1010;
         cpu.memory.mem_write(0x0000, 0b1000_0001);
 
-        cpu.adc(&AddressingMode::Immediate);
+        cpu.adc(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0b0000_1011);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1100,7 +1214,7 @@ mod test_opcodes {
         cpu.register_a = 0b1000_1010;
         cpu.memory.mem_write(0x0000, 0b0000_0010);
 
-        cpu.and(&AddressingMode::Immediate);
+        cpu.and(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0b0000_0010);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1112,7 +1226,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x0000, 0b0000_0001);
 
-        cpu.asl(&AddressingMode::Immediate);
+        cpu.asl(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0b0000_0010);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1125,7 +1239,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.register_a = 0b0000_0001;
 
-        cpu.asl(&AddressingMode::Accumulator);
+        cpu.asl(&AddressingMode::Accumulator, 0);
 
         assert_eq!(cpu.register_a, 0b0000_0010);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1177,7 +1291,7 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0000, 0x01);
         cpu.memory.mem_write(0x0001, 0b1100_0000);
 
-        cpu.bit(&AddressingMode::ZeroPage);
+        cpu.bit(&AddressingMode::ZeroPage, 0);
 
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
         assert_eq!(cpu.status.read_flag(Flag::Negative), true);
@@ -1309,7 +1423,7 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0000, 0b0100_0000);
         cpu.register_a = 0b1100_0000;
 
-        cpu.cmp(&AddressingMode::Immediate);
+        cpu.cmp(&AddressingMode::Immediate, 0);
 
         let negative_flag = cpu.status.read_flag(Flag::Negative);
 
@@ -1322,7 +1436,7 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0000, 0b0100_0000);
         cpu.register_a = 0b0100_0000;
 
-        cpu.cmp(&AddressingMode::Immediate);
+        cpu.cmp(&AddressingMode::Immediate, 0);
 
         let zero_flag = cpu.status.read_flag(Flag::Zero);
 
@@ -1335,7 +1449,7 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0000, 0b1000_0000);
         cpu.register_a = 0b1000_0000;
 
-        cpu.cmp(&AddressingMode::Immediate);
+        cpu.cmp(&AddressingMode::Immediate, 0);
 
         let zero_flag = cpu.status.read_flag(Flag::Zero);
         let carry_flag = cpu.status.read_flag(Flag::Carry);
@@ -1349,7 +1463,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x0000, 0x12);
 
-        cpu.dec(&AddressingMode::Immediate);
+        cpu.dec(&AddressingMode::Immediate, 0);
 
         let result = cpu.memory.mem_read(0x0000);
 
@@ -1385,7 +1499,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x0000, 0x11);
 
-        cpu.inc(&AddressingMode::Immediate);
+        cpu.inc(&AddressingMode::Immediate, 0);
 
         let result = cpu.memory.mem_read(0x0000);
 
@@ -1422,7 +1536,7 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0000, 0b1010_1010);
         cpu.register_a = 0b1111_0000;
 
-        cpu.eor(&AddressingMode::Immediate);
+        cpu.eor(&AddressingMode::Immediate, 0);
 
         let result = cpu.register_a;
 
@@ -1457,7 +1571,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x0000, 0x12);
 
-        cpu.lda(&AddressingMode::Immediate);
+        cpu.lda(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0x12);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1469,7 +1583,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x0000, 0x12);
 
-        cpu.ldx(&AddressingMode::Immediate);
+        cpu.ldx(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_x, 0x12);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1481,7 +1595,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.memory.mem_write(0x0000, 0x12);
 
-        cpu.ldy(&AddressingMode::Immediate);
+        cpu.ldy(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_y, 0x12);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1493,7 +1607,7 @@ mod test_opcodes {
         let mut cpu = CPU::new();
         cpu.register_a = 0b0000_1111;
 
-        cpu.lsr(&AddressingMode::Accumulator);
+        cpu.lsr(&AddressingMode::Accumulator, 0);
 
         assert_eq!(cpu.register_a, 0b0000_0111);
         assert_eq!(cpu.status.read_flag(Flag::Carry), true);
@@ -1506,7 +1620,7 @@ mod test_opcodes {
         cpu.register_a = 0b0000_0001;
         cpu.memory.mem_write(0x0000, 0b0000_0010);
 
-        cpu.ora(&AddressingMode::Immediate);
+        cpu.ora(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0b0000_0011);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1568,7 +1682,7 @@ mod test_opcodes {
         cpu.register_a = 0b1000_1110;
         cpu.status.set_flag(Flag::Carry, true);
 
-        cpu.rol(&AddressingMode::Accumulator);
+        cpu.rol(&AddressingMode::Accumulator, 0);
 
         assert_eq!(cpu.register_a, 0b0001_1101);
         assert_eq!(cpu.status.read_flag(Flag::Carry), true);
@@ -1580,7 +1694,7 @@ mod test_opcodes {
         cpu.register_a = 0b0111_0001;
         cpu.status.set_flag(Flag::Carry, true);
 
-        cpu.ror(&AddressingMode::Accumulator);
+        cpu.ror(&AddressingMode::Accumulator, 0);
 
         assert_eq!(cpu.register_a, 0b1011_1000);
         assert_eq!(cpu.status.read_flag(Flag::Carry), true);
@@ -1615,7 +1729,7 @@ mod test_opcodes {
         cpu.memory.mem_write(0x0000, 0x08);
         cpu.status.set_flag(Flag::Carry, true);
 
-        cpu.sbc(&AddressingMode::Immediate);
+        cpu.sbc(&AddressingMode::Immediate, 0);
 
         assert_eq!(cpu.register_a, 0x0a);
         assert_eq!(cpu.status.read_flag(Flag::Zero), false);
@@ -1657,7 +1771,7 @@ mod test_opcodes {
         cpu.memory.mem_write_u16(0x0000, 0x1234);
         cpu.register_a = 0x01;
 
-        cpu.sta(&AddressingMode::Absolute);
+        cpu.sta(&AddressingMode::Absolute, 0);
 
         assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
     }
@@ -1668,7 +1782,7 @@ mod test_opcodes {
         cpu.memory.mem_write_u16(0x0000, 0x1234);
         cpu.register_x = 0x01;
 
-        cpu.stx(&AddressingMode::Absolute);
+        cpu.stx(&AddressingMode::Absolute, 0);
 
         assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
     }
@@ -1679,7 +1793,7 @@ mod test_opcodes {
         cpu.memory.mem_write_u16(0x0000, 0x1234);
         cpu.register_y = 0x01;
 
-        cpu.sty(&AddressingMode::Absolute);
+        cpu.sty(&AddressingMode::Absolute, 0);
 
         assert_eq!(cpu.memory.mem_read(0x1234), 0x01);
     }

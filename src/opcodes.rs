@@ -4,13 +4,13 @@ use lazy_static::lazy_static;
 
 pub struct OpCode {
     pub name: &'static str,
-    pub bytes: i8,
+    pub bytes: u8,
     pub cycles: i8,
     pub address_mode: AddressingMode,
 }
 
 impl OpCode {
-    pub fn new(name: &'static str, bytes: i8, cycles: i8, address_mode: AddressingMode) -> Self {
+    pub fn new(name: &'static str, bytes: u8, cycles: i8, address_mode: AddressingMode) -> Self {
         OpCode {
             name,
             bytes,
