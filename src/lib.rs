@@ -897,15 +897,17 @@ impl CPU {
                 None => panic!("OpCode not found in HashMap."),
             };
 
+            let bytes = *bytes - 1;
+
             match *name {
                 "ADC" => {
-                    self.adc(mode, *bytes);
+                    self.adc(mode, bytes);
                 }
                 "AND" => {
-                    self.and(mode, *bytes);
+                    self.and(mode, bytes);
                 }
                 "ASL" => {
-                    self.asl(mode, *bytes);
+                    self.asl(mode, bytes);
                 }
                 "BCC" => {
                     self.bcc(mode);
@@ -917,7 +919,7 @@ impl CPU {
                     self.beq(mode);
                 }
                 "BIT" => {
-                    self.bit(mode, *bytes);
+                    self.bit(mode, bytes);
                 }
                 "BMI" => {
                     self.bmi(mode);
@@ -937,15 +939,139 @@ impl CPU {
                 "BVS" => {
                     self.bvs(mode);
                 }
+                "CLC" => {
+                    self.clc();
+                }
+                "CLD" => {
+                    self.cld();
+                }
+                "CLI" => {
+                    self.cli();
+                }
+                "CLV" => {
+                    self.clv();
+                }
+                "CMP" => {
+                    self.cmp(mode, bytes);
+                }
+                "CPX" => {
+                    self.cpx(mode, bytes);
+                }
+                "CPY" => {
+                    self.cpy(mode, bytes);
+                }
+                "DEC" => {
+                    self.dec(mode, bytes);
+                }
+                "DEX" => {
+                    self.dex();
+                }
+                "DEY" => {
+                    self.dey();
+                }
+                "EOR" => {
+                    self.eor(mode, bytes);
+                }
+                "INC" => {
+                    self.inc(mode, bytes);
+                }
+                "INX" => {
+                    self.inx();
+                }
+                "INY" => {
+                    self.iny();
+                }
+                "JMP" => {
+                    self.jmp(mode);
+                }
+                "JSR" => {
+                    self.jsr(mode);
+                }
                 "LDA" => {
-                    self.lda(mode, *bytes);
+                    self.lda(mode, bytes);
+                }
+                "LDX" => {
+                    self.ldx(mode, bytes);
+                }
+                "LDY" => {
+                    self.ldy(mode, bytes);
+                }
+                "LSR" => {
+                    self.lsr(mode, bytes);
+                }
+                "NOP" => {
+                    self.nop();
+                }
+                "ORA" => {
+                    self.ora(mode, bytes);
+                }
+                "PHA" => {
+                    self.pha();
+                }
+                "PHP" => {
+                    self.php();
+                }
+                "PLA" => {
+                    self.pla();
+                }
+                "PLP" => {
+                    self.plp();
+                }
+                "ROL" => {
+                    self.rol(mode, bytes);
+                }
+                "ROR" => {
+                    self.ror(mode, bytes);
+                }
+                "RTI" => {
+                    self.rti();
+                }
+                "RTS" => {
+                    self.rts();
+                }
+                "SBC" => {
+                    self.sbc(mode, bytes);
+                }
+                "SEC" => {
+                    self.sec();
+                }
+                "SED" => {
+                    self.sed();
+                }
+                "SEI" => {
+                    self.sei();
+                }
+                "STA" => {
+                    self.sta(mode, bytes);
+                }
+                "STX" => {
+                    self.stx(mode, bytes);
+                }
+                "STY" => {
+                    self.sty(mode, bytes);
+                }
+                "TAX" => {
+                    self.tax();
+                }
+                "TAY" => {
+                    self.tay();
+                }
+                "TSX" => {
+                    self.tsx();
+                }
+                "TXA" => {
+                    self.txa();
+                }
+                "TXS" => {
+                    self.txs();
+                }
+                "TYA" => {
+                    self.tya();
                 }
                 _ => {
-                    todo!()
+                    panic!("Unknown opcode.")
                 }
             }
-
-            self.program_counter += (*bytes - 1) as u16;
         }
     }
 }
