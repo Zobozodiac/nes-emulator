@@ -21,4 +21,13 @@ fn main() {
     println!("adding -1: {}", memory.wrapping_add(signed_int as u16));
 
     println!("relative: {}", (0xf8 as u8) as i8);
+
+    let mut main_val = 0;
+
+    let x = [1, 2, 3];
+
+    for val in x {
+        println!("val: {}", main_val);
+        main_val += 1;
+    }
 }
