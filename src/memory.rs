@@ -5,7 +5,9 @@ pub struct Memory {
 
 impl Memory {
     pub fn new() -> Self {
-        Memory { storage: [0; 0xffff + 1] }
+        Memory {
+            storage: [0; 0xffff + 1],
+        }
     }
 
     /// Read a single byte from the memory
