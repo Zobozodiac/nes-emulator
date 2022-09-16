@@ -345,10 +345,11 @@ impl CPU {
     }
 
     /// Branch when the Carry flag = 0 (Carry clear)
-    fn bcc(&mut self, mode: &AddressingMode) {
+    fn bcc(&mut self, mode: &AddressingMode, bytes: u8) {
         let carry = self.status.read_flag(Flag::Carry);
 
         if carry {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -356,10 +357,11 @@ impl CPU {
     }
 
     /// Branch when the Carry flag = 1 (Carry set)
-    fn bcs(&mut self, mode: &AddressingMode) {
+    fn bcs(&mut self, mode: &AddressingMode, bytes: u8) {
         let carry = self.status.read_flag(Flag::Carry);
 
         if !carry {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -367,13 +369,20 @@ impl CPU {
     }
 
     /// Branch when the Zero flag = 1 (Result Zero)
-    fn beq(&mut self, mode: &AddressingMode) {
+    fn beq(&mut self, mode: &AddressingMode, bytes: u8) {
+        println!("BEQ start");
         let zero = self.status.read_flag(Flag::Zero);
 
+        println!("zero flag: {}", zero);
+
         if !zero {
+            println!("not branching\n");
+
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
+        println!("branching\n");
         self.move_pointer_on_branch(mode);
     }
 
@@ -396,10 +405,11 @@ impl CPU {
     }
 
     /// Branch when the Negative flag = 1 (Result Minus)
-    fn bmi(&mut self, mode: &AddressingMode) {
+    fn bmi(&mut self, mode: &AddressingMode, bytes: u8) {
         let negative = self.status.read_flag(Flag::Negative);
 
         if !negative {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -407,10 +417,11 @@ impl CPU {
     }
 
     /// Branch when the Zero flag = 0 (Result not Zero)
-    fn bne(&mut self, mode: &AddressingMode) {
+    fn bne(&mut self, mode: &AddressingMode, bytes: u8) {
         let zero = self.status.read_flag(Flag::Zero);
 
         if zero {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -418,10 +429,11 @@ impl CPU {
     }
 
     /// Branch when the Negative flag = 0 (Result Plus)
-    fn bpl(&mut self, mode: &AddressingMode) {
+    fn bpl(&mut self, mode: &AddressingMode, bytes: u8) {
         let negative = self.status.read_flag(Flag::Negative);
 
         if negative {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -443,10 +455,11 @@ impl CPU {
     }
 
     /// Branch when the Overflow flag = 0 (Overflow Clear)
-    fn bvc(&mut self, mode: &AddressingMode) {
+    fn bvc(&mut self, mode: &AddressingMode, bytes: u8) {
         let overflow = self.status.read_flag(Flag::Overflow);
 
         if overflow {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -454,10 +467,11 @@ impl CPU {
     }
 
     /// Branch when the Overflow flag = 1 (Overflow Set)
-    fn bvs(&mut self, mode: &AddressingMode) {
+    fn bvs(&mut self, mode: &AddressingMode, bytes: u8) {
         let overflow = self.status.read_flag(Flag::Overflow);
 
         if !overflow {
+            self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
@@ -579,7 +593,7 @@ impl CPU {
     }
 
     fn jsr(&mut self, mode: &AddressingMode) {
-        self.push_to_stack_u16(self.program_counter.wrapping_add(2));
+        self.push_to_stack_u16(self.program_counter.wrapping_add(1));
 
         self.jmp(mode);
     }
@@ -904,6 +918,20 @@ impl CPU {
 
             let bytes = *bytes - 1;
 
+            println!("Iteration:");
+            println!("Opcode Name: {}", *name);
+            println!("register_a: {:#04x}", self.register_a);
+            println!("register_x: {:#04x}", self.register_x);
+            println!("register_y: {:#04x}", self.register_y);
+            println!("stack_pointer: {:#04x}", self.stack_pointer);
+            println!("program_counter: {:#06x}", self.program_counter);
+            println!("status_byte: {:b}", self.status.get_status_byte());
+            println!("\nZero page:");
+            self.memory.print_page(0x00);
+            println!("\nSnake page:");
+            self.memory.print_page(0x02);
+            println!();
+
             match *name {
                 "ADC" => {
                     self.adc(mode, bytes);
@@ -915,34 +943,34 @@ impl CPU {
                     self.asl(mode, bytes);
                 }
                 "BCC" => {
-                    self.bcc(mode);
+                    self.bcc(mode, bytes);
                 }
                 "BCS" => {
-                    self.bcs(mode);
+                    self.bcs(mode, bytes);
                 }
                 "BEQ" => {
-                    self.beq(mode);
+                    self.beq(mode, bytes);
                 }
                 "BIT" => {
                     self.bit(mode, bytes);
                 }
                 "BMI" => {
-                    self.bmi(mode);
+                    self.bmi(mode, bytes);
                 }
                 "BNE" => {
-                    self.bne(mode);
+                    self.bne(mode, bytes);
                 }
                 "BPL" => {
-                    self.bpl(mode);
+                    self.bpl(mode, bytes);
                 }
                 "BRK" => {
-                    return;
+                    self.brk();
                 }
                 "BVC" => {
-                    self.bvc(mode);
+                    self.bvc(mode, bytes);
                 }
                 "BVS" => {
-                    self.bvs(mode);
+                    self.bvs(mode, bytes);
                 }
                 "CLC" => {
                     self.clc();
@@ -1385,7 +1413,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Carry, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bcc(&AddressingMode::Relative);
+        cpu.bcc(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1397,7 +1425,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Carry, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bcs(&AddressingMode::Relative);
+        cpu.bcs(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1409,7 +1437,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Zero, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.beq(&AddressingMode::Relative);
+        cpu.beq(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1436,7 +1464,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Negative, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bmi(&AddressingMode::Relative);
+        cpu.bmi(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1448,7 +1476,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Zero, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bne(&AddressingMode::Relative);
+        cpu.bne(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1460,7 +1488,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Negative, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bpl(&AddressingMode::Relative);
+        cpu.bpl(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1487,7 +1515,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Overflow, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bvc(&AddressingMode::Relative);
+        cpu.bvc(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1499,7 +1527,7 @@ mod test_opcodes {
         cpu.status.set_flag(Flag::Overflow, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
 
-        cpu.bvs(&AddressingMode::Relative);
+        cpu.bvs(&AddressingMode::Relative, 0);
 
         assert_eq!(cpu.program_counter, 0b0000_0000);
     }
@@ -1998,29 +2026,26 @@ mod test_run {
         let mut cpu = CPU::new();
 
         let game_code = vec![
-            0x20, 0x06, 0x06, 0x20, 0x38, 0x06, 0x20, 0x0d, 0x06, 0x20, 0x2a, 0x06, 0x60, 0xa9,
-            0x02, 0x85, 0x02, 0xa9, 0x04, 0x85, 0x03, 0xa9, 0x11, 0x85, 0x10, 0xa9, 0x10, 0x85,
-            0x12, 0xa9, 0x0f, 0x85, 0x14, 0xa9, 0x04, 0x85, 0x11, 0x85, 0x13, 0x85, 0x15, 0x60,
-            0xa5, 0xfe, 0x85, 0x00, 0xa5, 0xfe, 0x29, 0x03, 0x18, 0x69, 0x02, 0x85, 0x01, 0x60,
-            0x20, 0x4d, 0x06, 0x20, 0x8d, 0x06, 0x20, 0xc3, 0x06, 0x20, 0x19, 0x07, 0x20, 0x20,
-            0x07, 0x20, 0x2d, 0x07, 0x4c, 0x38, 0x06, 0xa5, 0xff, 0xc9, 0x77, 0xf0, 0x0d, 0xc9,
-            0x64, 0xf0, 0x14, 0xc9, 0x73, 0xf0, 0x1b, 0xc9, 0x61, 0xf0, 0x22, 0x60, 0xa9, 0x04,
-            0x24, 0x02, 0xd0, 0x26, 0xa9, 0x01, 0x85, 0x02, 0x60, 0xa9, 0x08, 0x24, 0x02, 0xd0,
-            0x1b, 0xa9, 0x02, 0x85, 0x02, 0x60, 0xa9, 0x01, 0x24, 0x02, 0xd0, 0x10, 0xa9, 0x04,
-            0x85, 0x02, 0x60, 0xa9, 0x02, 0x24, 0x02, 0xd0, 0x05, 0xa9, 0x08, 0x85, 0x02, 0x60,
-            0x60, 0x20, 0x94, 0x06, 0x20, 0xa8, 0x06, 0x60, 0xa5, 0x00, 0xc5, 0x10, 0xd0, 0x0d,
-            0xa5, 0x01, 0xc5, 0x11, 0xd0, 0x07, 0xe6, 0x03, 0xe6, 0x03, 0x20, 0x2a, 0x06, 0x60,
-            0xa2, 0x02, 0xb5, 0x10, 0xc5, 0x10, 0xd0, 0x06, 0xb5, 0x11, 0xc5, 0x11, 0xf0, 0x09,
-            0xe8, 0xe8, 0xe4, 0x03, 0xf0, 0x06, 0x4c, 0xaa, 0x06, 0x4c, 0x35, 0x07, 0x60, 0xa6,
-            0x03, 0xca, 0x8a, 0xb5, 0x10, 0x95, 0x12, 0xca, 0x10, 0xf9, 0xa5, 0x02, 0x4a, 0xb0,
-            0x09, 0x4a, 0xb0, 0x19, 0x4a, 0xb0, 0x1f, 0x4a, 0xb0, 0x2f, 0xa5, 0x10, 0x38, 0xe9,
-            0x20, 0x85, 0x10, 0x90, 0x01, 0x60, 0xc6, 0x11, 0xa9, 0x01, 0xc5, 0x11, 0xf0, 0x28,
-            0x60, 0xe6, 0x10, 0xa9, 0x1f, 0x24, 0x10, 0xf0, 0x1f, 0x60, 0xa5, 0x10, 0x18, 0x69,
-            0x20, 0x85, 0x10, 0xb0, 0x01, 0x60, 0xe6, 0x11, 0xa9, 0x06, 0xc5, 0x11, 0xf0, 0x0c,
-            0x60, 0xc6, 0x10, 0xa5, 0x10, 0x29, 0x1f, 0xc9, 0x1f, 0xf0, 0x01, 0x60, 0x4c, 0x35,
-            0x07, 0xa0, 0x00, 0xa5, 0xfe, 0x91, 0x00, 0x60, 0xa6, 0x03, 0xa9, 0x00, 0x81, 0x10,
-            0xa2, 0x00, 0xa9, 0x01, 0x81, 0x10, 0x60, 0xa2, 0x00, 0xea, 0xea, 0xca, 0xd0, 0xfb,
-            0x60,
+            0x20, 0x06, 0x06, 0x20, 0x38, 0x06, 0x20, 0x0d, 0x06, 0x20, 0x2a, 0x06, 0x60, 0xa9, 0x02, 0x85,
+            0x02, 0xa9, 0x04, 0x85, 0x03, 0xa9, 0x11, 0x85, 0x10, 0xa9, 0x10, 0x85, 0x12, 0xa9, 0x0f, 0x85,
+            0x14, 0xa9, 0x04, 0x85, 0x11, 0x85, 0x13, 0x85, 0x15, 0x60, 0xa5, 0xfe, 0x85, 0x00, 0xa5, 0xfe,
+            0x29, 0x03, 0x18, 0x69, 0x02, 0x85, 0x01, 0x60, 0x20, 0x4d, 0x06, 0x20, 0x8d, 0x06, 0x20, 0xc3,
+            0x06, 0x20, 0x19, 0x07, 0x20, 0x20, 0x07, 0x20, 0x2d, 0x07, 0x4c, 0x38, 0x06, 0xa5, 0xff, 0xc9,
+            0x77, 0xf0, 0x0d, 0xc9, 0x64, 0xf0, 0x14, 0xc9, 0x73, 0xf0, 0x1b, 0xc9, 0x61, 0xf0, 0x22, 0x60,
+            0xa9, 0x04, 0x24, 0x02, 0xd0, 0x26, 0xa9, 0x01, 0x85, 0x02, 0x60, 0xa9, 0x08, 0x24, 0x02, 0xd0,
+            0x1b, 0xa9, 0x02, 0x85, 0x02, 0x60, 0xa9, 0x01, 0x24, 0x02, 0xd0, 0x10, 0xa9, 0x04, 0x85, 0x02,
+            0x60, 0xa9, 0x02, 0x24, 0x02, 0xd0, 0x05, 0xa9, 0x08, 0x85, 0x02, 0x60, 0x60, 0x20, 0x94, 0x06,
+            0x20, 0xa8, 0x06, 0x60, 0xa5, 0x00, 0xc5, 0x10, 0xd0, 0x0d, 0xa5, 0x01, 0xc5, 0x11, 0xd0, 0x07,
+            0xe6, 0x03, 0xe6, 0x03, 0x20, 0x2a, 0x06, 0x60, 0xa2, 0x02, 0xb5, 0x10, 0xc5, 0x10, 0xd0, 0x06,
+            0xb5, 0x11, 0xc5, 0x11, 0xf0, 0x09, 0xe8, 0xe8, 0xe4, 0x03, 0xf0, 0x06, 0x4c, 0xaa, 0x06, 0x4c,
+            0x35, 0x07, 0x60, 0xa6, 0x03, 0xca, 0x8a, 0xb5, 0x10, 0x95, 0x12, 0xca, 0x10, 0xf9, 0xa5, 0x02,
+            0x4a, 0xb0, 0x09, 0x4a, 0xb0, 0x19, 0x4a, 0xb0, 0x1f, 0x4a, 0xb0, 0x2f, 0xa5, 0x10, 0x38, 0xe9,
+            0x20, 0x85, 0x10, 0x90, 0x01, 0x60, 0xc6, 0x11, 0xa9, 0x01, 0xc5, 0x11, 0xf0, 0x28, 0x60, 0xe6,
+            0x10, 0xa9, 0x1f, 0x24, 0x10, 0xf0, 0x1f, 0x60, 0xa5, 0x10, 0x18, 0x69, 0x20, 0x85, 0x10, 0xb0,
+            0x01, 0x60, 0xe6, 0x11, 0xa9, 0x06, 0xc5, 0x11, 0xf0, 0x0c, 0x60, 0xc6, 0x10, 0xa5, 0x10, 0x29,
+            0x1f, 0xc9, 0x1f, 0xf0, 0x01, 0x60, 0x4c, 0x35, 0x07, 0xa0, 0x00, 0xa5, 0xfe, 0x91, 0x00, 0x60,
+            0xa6, 0x03, 0xa9, 0x00, 0x81, 0x10, 0xa2, 0x00, 0xa9, 0x01, 0x81, 0x10, 0x60, 0xa2, 0x00, 0xea,
+            0xea, 0xca, 0xd0, 0xfb, 0x60,
         ];
 
         cpu.load(game_code);
