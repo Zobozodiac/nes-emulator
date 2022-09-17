@@ -164,7 +164,7 @@ impl CPU {
         value
     }
 
-    fn move_pointer_on_branch(&mut self, mode: &AddressingMode) {
+    fn move_pointer_on_branch(&mut self, mode: &AddressingMode, bytes: u8) {
         let value = self.get_operand_address_value(mode);
 
         // Signed value to know which direction the relative change is
@@ -174,6 +174,8 @@ impl CPU {
         // converting straight to u16 because for instance -1 would be 1111_1111 in u8, but
         // 1111_1111_1111_1111 in u16.
         let unsigned_u16: u16 = signed_value as u16;
+
+        self.apply_bytes_to_program_counter(bytes);
 
         let current_pointer = self.program_counter;
 
@@ -353,7 +355,7 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Branch when the Carry flag = 1 (Carry set)
@@ -365,25 +367,19 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Branch when the Zero flag = 1 (Result Zero)
     fn beq(&mut self, mode: &AddressingMode, bytes: u8) {
-        println!("BEQ start");
         let zero = self.status.read_flag(Flag::Zero);
 
-        println!("zero flag: {}", zero);
-
         if !zero {
-            println!("not branching\n");
-
             self.apply_bytes_to_program_counter(bytes);
             return;
         }
 
-        println!("branching\n");
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Test Bits in Memory with Accumulator
@@ -413,7 +409,7 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Branch when the Zero flag = 0 (Result not Zero)
@@ -425,7 +421,7 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Branch when the Negative flag = 0 (Result Plus)
@@ -437,7 +433,7 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Force break
@@ -463,7 +459,7 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     /// Branch when the Overflow flag = 1 (Overflow Set)
@@ -475,7 +471,7 @@ impl CPU {
             return;
         }
 
-        self.move_pointer_on_branch(mode);
+        self.move_pointer_on_branch(mode, bytes);
     }
 
     fn clc(&mut self) {
@@ -899,6 +895,19 @@ impl CPU {
         F: FnMut(&mut CPU),
     {
         loop {
+            // println!("Iteration:");
+            // println!("register_a: {:#04x}", self.register_a);
+            // println!("register_x: {:#04x}", self.register_x);
+            // println!("register_y: {:#04x}", self.register_y);
+            // println!("stack_pointer: {:#04x}", self.stack_pointer);
+            // println!("program_counter: {:#06x}", self.program_counter);
+            // println!("status_byte: {:b}", self.status.get_status_byte());
+            // println!("\nZero page:");
+            // self.memory.print_page(0x00);
+            // println!("\nSnake page:");
+            // self.memory.print_page(0x02);
+            // println!();
+
             callback(self);
 
             let code = self.memory.mem_read(self.program_counter);
@@ -918,19 +927,7 @@ impl CPU {
 
             let bytes = *bytes - 1;
 
-            println!("Iteration:");
-            println!("Opcode Name: {}", *name);
-            println!("register_a: {:#04x}", self.register_a);
-            println!("register_x: {:#04x}", self.register_x);
-            println!("register_y: {:#04x}", self.register_y);
-            println!("stack_pointer: {:#04x}", self.stack_pointer);
-            println!("program_counter: {:#06x}", self.program_counter);
-            println!("status_byte: {:b}", self.status.get_status_byte());
-            println!("\nZero page:");
-            self.memory.print_page(0x00);
-            println!("\nSnake page:");
-            self.memory.print_page(0x02);
-            println!();
+            println!("Opcode Name: {}\n", *name);
 
             match *name {
                 "ADC" => {
