@@ -927,7 +927,7 @@ impl CPU {
 
             let bytes = *bytes - 1;
 
-            println!("Opcode Name: {}\n", *name);
+            // println!("Opcode Name: {}\n", *name);
 
             match *name {
                 "ADC" => {
