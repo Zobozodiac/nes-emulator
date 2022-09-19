@@ -1,4 +1,72 @@
 /// A memory object with read and write operations. Stores an array of 0xFFFF bytes.
+
+pub trait Mem {
+    fn mem_write(&mut self, address: u16, data: u8);
+
+    fn mem_read(&self, address: u16) -> u8;
+
+    fn mem_write_u16(&mut self, address: u16, data: u16) {
+        let [lo, hi] = data.to_le_bytes();
+        self.mem_write(address, lo);
+        self.mem_write(address.wrapping_add(1), hi);
+    }
+
+    fn mem_read_u16(&self, address: u16) -> u16 {
+        let lo = self.mem_read(address);
+        let hi = self.mem_read(address.wrapping_add(1));
+
+        u16::from_le_bytes([lo, hi])
+    }
+}
+
+pub struct Storage {
+    storage: Vec<u8>,
+}
+
+impl Mem for Storage {
+    fn mem_write(&mut self, address: u16, data: u8) {
+        self.storage[address as usize] = data;
+    }
+
+    fn mem_read(&self, address: u16) -> u8 {
+        self.storage[address as usize]
+    }
+}
+
+impl Storage {
+    pub fn new(size: usize) -> Self {
+        Storage {
+            storage: vec![0; size],
+        }
+    }
+
+    pub fn print_page(&self, page: u8) {
+        for i in 0..(0xf + 1) {
+            let i = (i << 4) as u8;
+
+            let start_address = u16::from_le_bytes([i, page]);
+
+            self.print_row(start_address);
+        }
+    }
+
+    pub fn print_row(&self, start_address: u16) {
+        let mut print_string = format!("{:04x}:", start_address);
+
+        for i in 0..(0xf + 1) {
+            let i = i as u16;
+
+            let address = start_address + i;
+
+            let value = self.mem_read(address);
+
+            print_string.push_str(&format!(" {:02x}", value));
+        }
+
+        println!("{}", print_string);
+    }
+}
+
 pub struct Memory {
     storage: [u8; 0xffff + 1],
 }
