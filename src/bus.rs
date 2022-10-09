@@ -1,3 +1,4 @@
+use crate::cartridge::Cartridge;
 use crate::memory::{Mem, Storage};
 
 const CPU_RAM_START: u16 = 0x0000;
@@ -7,6 +8,7 @@ const PPU_MEMORY_END: u16 = 0x3fff;
 
 pub struct Bus {
     cpu_ram: Storage,
+    cartridge: Cartridge,
 }
 
 impl Mem for Bus {
@@ -21,7 +23,7 @@ impl Mem for Bus {
                 panic!("PPU not implemented yet.");
             }
             _ => {
-                panic!("Address out of range.");
+                println!("Writing to address out of range {}", address);
             }
         }
     }
@@ -37,16 +39,18 @@ impl Mem for Bus {
                 panic!("PPU not implemented yet.");
             }
             _ => {
-                panic!("Address out of range.");
+                println!("Reading to address out of range {}", address);
+                0
             }
         }
     }
 }
 
 impl Bus {
-    pub fn new() -> Self {
+    pub fn new(cartridge: Cartridge) -> Self {
         Bus {
             cpu_ram: Storage::new(2048),
+            cartridge: cartridge,
         }
     }
 }

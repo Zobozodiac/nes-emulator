@@ -67,86 +67,13 @@ impl Storage {
     }
 }
 
-pub struct Memory {
-    storage: [u8; 0xffff + 1],
-}
-
-impl Memory {
-    pub fn new() -> Self {
-        Memory {
-            storage: [0; 0xffff + 1],
-        }
-    }
-
-    /// Read a single byte from the memory
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use nes_emulator::memory::Memory;
-    ///
-    /// let mut memory = Memory::new();
-    /// memory.mem_write(0x0001, 0x12)
-    /// ```
-    pub fn mem_write(&mut self, address: u16, data: u8) {
-        self.storage[address as usize] = data;
-    }
-
-    pub fn mem_write_u16(&mut self, address: u16, data: u16) {
-        let [lo, hi] = data.to_le_bytes();
-        self.mem_write(address, lo);
-        self.mem_write(address.wrapping_add(1), hi);
-    }
-
-    pub fn mem_read(&self, address: u16) -> u8 {
-        self.storage[address as usize]
-    }
-
-    pub fn mem_read_u16(&self, address: u16) -> u16 {
-        let lo = self.mem_read(address);
-        let hi = self.mem_read(address.wrapping_add(1));
-
-        u16::from_le_bytes([lo, hi])
-    }
-
-    pub fn load_program(&mut self, program: Vec<u8>) {
-        self.storage[0x8000..(0x8000 + program.len())].copy_from_slice(&program[..]);
-    }
-
-    pub fn print_page(&self, page: u8) {
-        for i in 0..(0xf + 1) {
-            let i = (i << 4) as u8;
-
-            let start_address = u16::from_le_bytes([i, page]);
-
-            self.print_row(start_address);
-        }
-    }
-
-    pub fn print_row(&self, start_address: u16) {
-        let mut print_string = format!("{:04x}:", start_address);
-
-        for i in 0..(0xf + 1) {
-            let i = i as u16;
-
-            let address = start_address + i;
-
-            let value = self.mem_read(address);
-
-            print_string.push_str(&format!(" {:02x}", value));
-        }
-
-        println!("{}", print_string);
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
     fn test_mem_write() {
-        let mut memory = Memory::new();
+        let mut memory = Storage::new(0xffff);
         memory.mem_write(0x0000, 0x12);
 
         assert_eq!(memory.storage[0x0000], 0x12);
@@ -154,7 +81,7 @@ mod test {
 
     #[test]
     fn test_mem_write_u16() {
-        let mut memory = Memory::new();
+        let mut memory = Storage::new(0xffff);
         memory.mem_write_u16(0x0000, 0x1234);
 
         assert_eq!(memory.storage[0x0000], 0x34);
@@ -163,7 +90,7 @@ mod test {
 
     #[test]
     fn test_mem_read() {
-        let mut memory = Memory::new();
+        let mut memory = Storage::new(0xffff);
         memory.mem_write(0x0000, 0x12);
 
         assert_eq!(memory.mem_read(0x0000), 0x12);
@@ -171,24 +98,15 @@ mod test {
 
     #[test]
     fn test_mem_read_u16() {
-        let mut memory = Memory::new();
+        let mut memory = Storage::new(0xffff);
         memory.mem_write_u16(0x0000, 0x1234);
 
         assert_eq!(memory.mem_read_u16(0x0000), 0x1234);
     }
 
     #[test]
-    fn test_mem_load_program() {
-        let mut memory = Memory::new();
-        let program = vec![0xa9];
-        memory.load_program(program);
-
-        assert_eq!(memory.mem_read(0x8000), 0xa9);
-    }
-
-    #[test]
     fn test_print_row() {
-        let mut memory = Memory::new();
+        let mut memory = Storage::new(0xffff);
         memory.mem_write(0x0120, 0x0);
         memory.mem_write(0x0121, 0x1);
         memory.mem_write(0x0122, 0x2);
@@ -211,7 +129,7 @@ mod test {
 
     #[test]
     fn test_print_page() {
-        let mut memory = Memory::new();
+        let mut memory = Storage::new(0xffff);
         memory.mem_write(0x0120, 0x0);
         memory.mem_write(0x0121, 0x1);
         memory.mem_write(0x0122, 0x2);

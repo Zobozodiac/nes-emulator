@@ -1,3 +1,6 @@
+use crate::bus::Bus;
+use crate::cartridge::{Cartridge, CHR_ROM_PAGE_SIZE, PRG_ROM_PAGE_SIZE};
+use crate::memory::Mem;
 use crate::status::Flag;
 use opcodes::{AddressingMode, OpCode};
 use std::ops::Add;
@@ -6,9 +9,13 @@ use std::ops::Add;
 
 pub mod memory;
 
+pub mod bus;
+
 pub mod opcodes;
 
 pub mod status;
+
+pub mod cartridge;
 
 pub struct CPU {
     register_a: u8,
@@ -17,11 +24,11 @@ pub struct CPU {
     status: status::Status,
     program_counter: u16,
     stack_pointer: u8,
-    memory: memory::Memory,
+    memory: Bus,
 }
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new(rom: Cartridge) -> Self {
         CPU {
             register_a: 0,
             register_x: 0,
@@ -29,7 +36,7 @@ impl CPU {
             status: status::Status::new(),
             program_counter: 0,
             stack_pointer: 0xff,
-            memory: memory::Memory::new(),
+            memory: Bus::new(rom),
         }
     }
 
@@ -244,8 +251,8 @@ impl CPU {
     fn check_boundary_crossed(&mut self, address: u16, value: u8) -> bool {
         let updated_address = address.wrapping_add(value as u16);
 
-        let [start_address_lo, start_address_hi] = u16::to_le_bytes(address);
-        let [updated_address_lo, updated_address_hi] = u16::to_le_bytes(updated_address);
+        let [_start_address_lo, start_address_hi] = u16::to_le_bytes(address);
+        let [_updated_address_lo, updated_address_hi] = u16::to_le_bytes(updated_address);
 
         let crossed_page = updated_address_hi != start_address_hi;
         crossed_page
@@ -875,16 +882,16 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    pub fn load_and_run(&mut self, program: Vec<u8>) {
-        self.load(program);
-        self.reset();
-        self.run()
-    }
-
-    pub fn load(&mut self, program: Vec<u8>) {
-        self.memory.load_program(program);
-        self.memory.mem_write_u16(0xFFFC, 0x8000);
-    }
+    // pub fn load_and_run(&mut self, program: Vec<u8>) {
+    //     self.load(program);
+    //     self.reset();
+    //     self.run()
+    // }
+    //
+    // pub fn load(&mut self, program: Vec<u8>) {
+    //     self.memory.load_program(program);
+    //     self.memory.mem_write_u16(0xFFFC, 0x0600);
+    // }
 
     pub fn run(&mut self) {
         self.run_with_callback(|_| {});
@@ -1106,13 +1113,36 @@ impl CPU {
     }
 }
 
+fn make_test_cartridge() -> Cartridge {
+    let mut contents: Vec<u8> = vec![
+        0x4e,
+        0x45,
+        0x53,
+        0x1a,
+        0x02,
+        0x02,
+        0b0001_0001,
+        0b0000_0000,
+        0x00,
+        0x00,
+    ];
+
+    contents.extend([0; 6]);
+    contents.extend([0x01; PRG_ROM_PAGE_SIZE * 2]);
+    contents.extend([0x02; CHR_ROM_PAGE_SIZE * 2]);
+
+    let cartridge = Cartridge::new(&contents);
+
+    return cartridge;
+}
+
 #[cfg(test)]
 mod test_stack {
     use super::*;
 
     #[test]
     fn test_stack_address() {
-        let cpu = CPU::new();
+        let cpu = CPU::new(make_test_cartridge());
 
         let address = cpu.get_stack_address();
 
@@ -1121,7 +1151,7 @@ mod test_stack {
 
     #[test]
     fn test_push_to_stack() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.push_to_stack(0x12);
 
@@ -1133,7 +1163,7 @@ mod test_stack {
 
     #[test]
     fn test_push_to_stack_u16() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.push_to_stack_u16(0x1234);
 
@@ -1146,7 +1176,7 @@ mod test_stack {
 
     #[test]
     fn test_pull_from_stack() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.push_to_stack(0x12);
         let data = cpu.pull_from_stack();
@@ -1159,7 +1189,7 @@ mod test_stack {
 
     #[test]
     fn test_pull_from_stack_u16() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.push_to_stack_u16(0x1234);
         let data = cpu.pull_from_stack_u16();
@@ -1177,7 +1207,7 @@ mod test_address_modes {
 
     #[test]
     fn test_immediate() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         let address = cpu.get_operand_address(&AddressingMode::Immediate);
 
@@ -1187,7 +1217,7 @@ mod test_address_modes {
     #[test]
     fn test_zero_page() {
         // The program counter is pointing to 0x00 so we set this to 0x12 and check it works
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x00, 0x12);
 
         let address = cpu.get_operand_address(&AddressingMode::ZeroPage);
@@ -1197,7 +1227,7 @@ mod test_address_modes {
 
     #[test]
     fn test_zero_page_x() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x01;
         cpu.memory.mem_write(0x00, 0x12);
 
@@ -1208,7 +1238,7 @@ mod test_address_modes {
 
     #[test]
     fn test_zero_page_y() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_y = 0x01;
         cpu.memory.mem_write(0x00, 0x12);
 
@@ -1219,7 +1249,7 @@ mod test_address_modes {
 
     #[test]
     fn test_absolute() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x00, 0x1234);
 
         let address = cpu.get_operand_address(&AddressingMode::Absolute);
@@ -1229,7 +1259,7 @@ mod test_address_modes {
 
     #[test]
     fn test_absolute_x() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x01;
         cpu.memory.mem_write_u16(0x00, 0x1234);
 
@@ -1240,7 +1270,7 @@ mod test_address_modes {
 
     #[test]
     fn test_absolute_y() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_y = 0x01;
         cpu.memory.mem_write_u16(0x00, 0x1234);
 
@@ -1251,7 +1281,7 @@ mod test_address_modes {
 
     #[test]
     fn test_indirect() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x00, 0x1234);
         cpu.memory.mem_write_u16(0x1234, 0x5678);
 
@@ -1262,7 +1292,7 @@ mod test_address_modes {
 
     #[test]
     fn test_indirect_x() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x01;
         cpu.memory.mem_write(0x00, 0x12);
         cpu.memory.mem_write_u16(0x13, 0x3456);
@@ -1274,7 +1304,7 @@ mod test_address_modes {
 
     #[test]
     fn test_indirect_y() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_y = 0x01;
         cpu.memory.mem_write_u16(0x00, 0x12);
         cpu.memory.mem_write_u16(0x12, 0x3456);
@@ -1291,7 +1321,7 @@ mod test_opcodes {
 
     #[test]
     fn test_adc() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0x12;
         cpu.memory.mem_write(0x0000, 0x34);
 
@@ -1306,7 +1336,7 @@ mod test_opcodes {
 
     #[test]
     fn test_adc_zero() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0x00;
         cpu.memory.mem_write(0x0000, 0x00);
 
@@ -1321,7 +1351,7 @@ mod test_opcodes {
 
     #[test]
     fn test_adc_negative() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b1000_1010;
         cpu.memory.mem_write(0x0000, 0b0000_0001);
 
@@ -1336,7 +1366,7 @@ mod test_opcodes {
 
     #[test]
     fn test_adc_carry() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b1100_1010;
         cpu.memory.mem_write(0x0000, 0b0100_0001);
 
@@ -1351,7 +1381,7 @@ mod test_opcodes {
 
     #[test]
     fn test_adc_overflow() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b1000_1010;
         cpu.memory.mem_write(0x0000, 0b1000_0001);
 
@@ -1366,7 +1396,7 @@ mod test_opcodes {
 
     #[test]
     fn test_and() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b1000_1010;
         cpu.memory.mem_write(0x0000, 0b0000_0010);
 
@@ -1379,7 +1409,7 @@ mod test_opcodes {
 
     #[test]
     fn test_asl() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0b0000_0001);
 
         cpu.asl(&AddressingMode::Immediate, 0);
@@ -1392,7 +1422,7 @@ mod test_opcodes {
 
     #[test]
     fn test_asl_accumulator() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b0000_0001;
 
         cpu.asl(&AddressingMode::Accumulator, 0);
@@ -1405,7 +1435,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bcc() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Carry, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1417,7 +1447,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bcs() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Carry, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1429,7 +1459,7 @@ mod test_opcodes {
 
     #[test]
     fn test_beq() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Zero, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1441,7 +1471,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bit() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0000;
         cpu.register_a = 0b0100_0000;
         cpu.memory.mem_write(0x0000, 0x01);
@@ -1456,7 +1486,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bmi() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Negative, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1468,7 +1498,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bne() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Zero, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1480,7 +1510,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bpl() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Negative, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1492,7 +1522,7 @@ mod test_opcodes {
 
     #[test]
     fn test_brk() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0xfffe, 0x0012);
 
         cpu.brk();
@@ -1507,7 +1537,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bvc() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Overflow, false);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1519,7 +1549,7 @@ mod test_opcodes {
 
     #[test]
     fn test_bvs() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.program_counter = 0x0002;
         cpu.status.set_flag(Flag::Overflow, true);
         cpu.memory.mem_write(0x0002, 0b1111_1110);
@@ -1531,7 +1561,7 @@ mod test_opcodes {
 
     #[test]
     fn test_clc() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.status.set_flag(Flag::Carry, true);
         cpu.clc();
 
@@ -1542,7 +1572,7 @@ mod test_opcodes {
 
     #[test]
     fn test_cld() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.status.set_flag(Flag::Decimal, true);
         cpu.cld();
 
@@ -1553,7 +1583,7 @@ mod test_opcodes {
 
     #[test]
     fn test_cli() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.status.set_flag(Flag::Interrupt, true);
         cpu.cli();
 
@@ -1564,7 +1594,7 @@ mod test_opcodes {
 
     #[test]
     fn test_clv() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.status.set_flag(Flag::Overflow, true);
         cpu.clv();
 
@@ -1575,7 +1605,7 @@ mod test_opcodes {
 
     #[test]
     fn test_cmp_negative() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0b0100_0000);
         cpu.register_a = 0b1100_0000;
 
@@ -1588,7 +1618,7 @@ mod test_opcodes {
 
     #[test]
     fn test_cmp_zero() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0b0100_0000);
         cpu.register_a = 0b0100_0000;
 
@@ -1601,7 +1631,7 @@ mod test_opcodes {
 
     #[test]
     fn test_cmp_carry() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0b1000_0000);
         cpu.register_a = 0b1000_0000;
 
@@ -1616,7 +1646,7 @@ mod test_opcodes {
 
     #[test]
     fn test_dec() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0x12);
 
         cpu.dec(&AddressingMode::Immediate, 0);
@@ -1628,7 +1658,7 @@ mod test_opcodes {
 
     #[test]
     fn test_dex() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x12;
 
         cpu.dex();
@@ -1640,7 +1670,7 @@ mod test_opcodes {
 
     #[test]
     fn test_dey() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_y = 0x12;
 
         cpu.dey();
@@ -1652,7 +1682,7 @@ mod test_opcodes {
 
     #[test]
     fn test_inc() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0x11);
 
         cpu.inc(&AddressingMode::Immediate, 0);
@@ -1664,7 +1694,7 @@ mod test_opcodes {
 
     #[test]
     fn test_inx() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x11;
 
         cpu.inx();
@@ -1676,7 +1706,7 @@ mod test_opcodes {
 
     #[test]
     fn test_iny() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_y = 0x11;
 
         cpu.iny();
@@ -1688,7 +1718,7 @@ mod test_opcodes {
 
     #[test]
     fn test_eor() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0b1010_1010);
         cpu.register_a = 0b1111_0000;
 
@@ -1701,7 +1731,7 @@ mod test_opcodes {
 
     #[test]
     fn test_jmp() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x0000, 0x0200);
 
         cpu.jmp(&AddressingMode::Absolute);
@@ -1711,7 +1741,7 @@ mod test_opcodes {
 
     #[test]
     fn test_jsr() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x0000, 0x0200);
 
         cpu.jsr(&AddressingMode::Absolute);
@@ -1724,7 +1754,7 @@ mod test_opcodes {
 
     #[test]
     fn test_lda() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0x12);
 
         cpu.lda(&AddressingMode::Immediate, 0);
@@ -1736,7 +1766,7 @@ mod test_opcodes {
 
     #[test]
     fn test_ldx() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0x12);
 
         cpu.ldx(&AddressingMode::Immediate, 0);
@@ -1748,7 +1778,7 @@ mod test_opcodes {
 
     #[test]
     fn test_ldy() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write(0x0000, 0x12);
 
         cpu.ldy(&AddressingMode::Immediate, 0);
@@ -1760,7 +1790,7 @@ mod test_opcodes {
 
     #[test]
     fn test_lsr() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b0000_1111;
 
         cpu.lsr(&AddressingMode::Accumulator, 0);
@@ -1772,7 +1802,7 @@ mod test_opcodes {
 
     #[test]
     fn test_ora() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b0000_0001;
         cpu.memory.mem_write(0x0000, 0b0000_0010);
 
@@ -1785,7 +1815,7 @@ mod test_opcodes {
 
     #[test]
     fn test_pha() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0x12;
 
         cpu.pha();
@@ -1797,7 +1827,7 @@ mod test_opcodes {
 
     #[test]
     fn test_php() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.status.set_flag(Flag::Zero, true);
 
         let status = cpu.status.get_status_byte();
@@ -1812,7 +1842,7 @@ mod test_opcodes {
 
     #[test]
     fn test_pla() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.push_to_stack(0x12);
 
         cpu.pla();
@@ -1824,7 +1854,7 @@ mod test_opcodes {
 
     #[test]
     fn test_plp() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.push_to_stack(0b0011_0010);
 
         cpu.plp();
@@ -1834,7 +1864,7 @@ mod test_opcodes {
 
     #[test]
     fn test_rol() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b1000_1110;
         cpu.status.set_flag(Flag::Carry, true);
 
@@ -1846,7 +1876,7 @@ mod test_opcodes {
 
     #[test]
     fn test_ror() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0b0111_0001;
         cpu.status.set_flag(Flag::Carry, true);
 
@@ -1858,7 +1888,7 @@ mod test_opcodes {
 
     #[test]
     fn test_rti() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.push_to_stack_u16(0x1234);
         cpu.push_to_stack(0b0000_0011);
 
@@ -1870,7 +1900,7 @@ mod test_opcodes {
 
     #[test]
     fn test_rts() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.push_to_stack_u16(0x1234);
 
         cpu.rts();
@@ -1880,7 +1910,7 @@ mod test_opcodes {
 
     #[test]
     fn test_sbc() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0x12;
         cpu.memory.mem_write(0x0000, 0x08);
         cpu.status.set_flag(Flag::Carry, true);
@@ -1896,7 +1926,7 @@ mod test_opcodes {
 
     #[test]
     fn test_sec() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.sec();
 
@@ -1905,7 +1935,7 @@ mod test_opcodes {
 
     #[test]
     fn test_sed() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.sed();
 
@@ -1914,7 +1944,7 @@ mod test_opcodes {
 
     #[test]
     fn test_sei() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.sei();
 
@@ -1923,7 +1953,7 @@ mod test_opcodes {
 
     #[test]
     fn test_sta() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x0000, 0x1234);
         cpu.register_a = 0x01;
 
@@ -1934,7 +1964,7 @@ mod test_opcodes {
 
     #[test]
     fn test_stx() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x0000, 0x1234);
         cpu.register_x = 0x01;
 
@@ -1945,7 +1975,7 @@ mod test_opcodes {
 
     #[test]
     fn test_sty() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.memory.mem_write_u16(0x0000, 0x1234);
         cpu.register_y = 0x01;
 
@@ -1956,7 +1986,7 @@ mod test_opcodes {
 
     #[test]
     fn test_tax() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0x01;
 
         cpu.tax();
@@ -1966,7 +1996,7 @@ mod test_opcodes {
 
     #[test]
     fn test_tay() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_a = 0x01;
 
         cpu.tay();
@@ -1976,7 +2006,7 @@ mod test_opcodes {
 
     #[test]
     fn test_tsx() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
 
         cpu.tsx();
 
@@ -1985,7 +2015,7 @@ mod test_opcodes {
 
     #[test]
     fn test_txa() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x12;
 
         cpu.txa();
@@ -1995,7 +2025,7 @@ mod test_opcodes {
 
     #[test]
     fn test_txs() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_x = 0x12;
 
         cpu.txs();
@@ -2005,7 +2035,7 @@ mod test_opcodes {
 
     #[test]
     fn test_tya() {
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(make_test_cartridge());
         cpu.register_y = 0x12;
 
         cpu.tya();
@@ -2020,35 +2050,35 @@ mod test_run {
 
     #[test]
     fn test_snake() {
-        let mut cpu = CPU::new();
-
-        let game_code = vec![
-            0x20, 0x06, 0x06, 0x20, 0x38, 0x06, 0x20, 0x0d, 0x06, 0x20, 0x2a, 0x06, 0x60, 0xa9, 0x02, 0x85,
-            0x02, 0xa9, 0x04, 0x85, 0x03, 0xa9, 0x11, 0x85, 0x10, 0xa9, 0x10, 0x85, 0x12, 0xa9, 0x0f, 0x85,
-            0x14, 0xa9, 0x04, 0x85, 0x11, 0x85, 0x13, 0x85, 0x15, 0x60, 0xa5, 0xfe, 0x85, 0x00, 0xa5, 0xfe,
-            0x29, 0x03, 0x18, 0x69, 0x02, 0x85, 0x01, 0x60, 0x20, 0x4d, 0x06, 0x20, 0x8d, 0x06, 0x20, 0xc3,
-            0x06, 0x20, 0x19, 0x07, 0x20, 0x20, 0x07, 0x20, 0x2d, 0x07, 0x4c, 0x38, 0x06, 0xa5, 0xff, 0xc9,
-            0x77, 0xf0, 0x0d, 0xc9, 0x64, 0xf0, 0x14, 0xc9, 0x73, 0xf0, 0x1b, 0xc9, 0x61, 0xf0, 0x22, 0x60,
-            0xa9, 0x04, 0x24, 0x02, 0xd0, 0x26, 0xa9, 0x01, 0x85, 0x02, 0x60, 0xa9, 0x08, 0x24, 0x02, 0xd0,
-            0x1b, 0xa9, 0x02, 0x85, 0x02, 0x60, 0xa9, 0x01, 0x24, 0x02, 0xd0, 0x10, 0xa9, 0x04, 0x85, 0x02,
-            0x60, 0xa9, 0x02, 0x24, 0x02, 0xd0, 0x05, 0xa9, 0x08, 0x85, 0x02, 0x60, 0x60, 0x20, 0x94, 0x06,
-            0x20, 0xa8, 0x06, 0x60, 0xa5, 0x00, 0xc5, 0x10, 0xd0, 0x0d, 0xa5, 0x01, 0xc5, 0x11, 0xd0, 0x07,
-            0xe6, 0x03, 0xe6, 0x03, 0x20, 0x2a, 0x06, 0x60, 0xa2, 0x02, 0xb5, 0x10, 0xc5, 0x10, 0xd0, 0x06,
-            0xb5, 0x11, 0xc5, 0x11, 0xf0, 0x09, 0xe8, 0xe8, 0xe4, 0x03, 0xf0, 0x06, 0x4c, 0xaa, 0x06, 0x4c,
-            0x35, 0x07, 0x60, 0xa6, 0x03, 0xca, 0x8a, 0xb5, 0x10, 0x95, 0x12, 0xca, 0x10, 0xf9, 0xa5, 0x02,
-            0x4a, 0xb0, 0x09, 0x4a, 0xb0, 0x19, 0x4a, 0xb0, 0x1f, 0x4a, 0xb0, 0x2f, 0xa5, 0x10, 0x38, 0xe9,
-            0x20, 0x85, 0x10, 0x90, 0x01, 0x60, 0xc6, 0x11, 0xa9, 0x01, 0xc5, 0x11, 0xf0, 0x28, 0x60, 0xe6,
-            0x10, 0xa9, 0x1f, 0x24, 0x10, 0xf0, 0x1f, 0x60, 0xa5, 0x10, 0x18, 0x69, 0x20, 0x85, 0x10, 0xb0,
-            0x01, 0x60, 0xe6, 0x11, 0xa9, 0x06, 0xc5, 0x11, 0xf0, 0x0c, 0x60, 0xc6, 0x10, 0xa5, 0x10, 0x29,
-            0x1f, 0xc9, 0x1f, 0xf0, 0x01, 0x60, 0x4c, 0x35, 0x07, 0xa0, 0x00, 0xa5, 0xfe, 0x91, 0x00, 0x60,
-            0xa6, 0x03, 0xa9, 0x00, 0x81, 0x10, 0xa2, 0x00, 0xa9, 0x01, 0x81, 0x10, 0x60, 0xa2, 0x00, 0xea,
-            0xea, 0xca, 0xd0, 0xfb, 0x60,
-        ];
-
-        cpu.load(game_code);
-
-        cpu.reset();
-
-        cpu.run_with_callback(move |cpu| {});
+        // let mut cpu = CPU::new();
+        //
+        // let game_code = vec![
+        //     0x20, 0x06, 0x06, 0x20, 0x38, 0x06, 0x20, 0x0d, 0x06, 0x20, 0x2a, 0x06, 0x60, 0xa9, 0x02, 0x85,
+        //     0x02, 0xa9, 0x04, 0x85, 0x03, 0xa9, 0x11, 0x85, 0x10, 0xa9, 0x10, 0x85, 0x12, 0xa9, 0x0f, 0x85,
+        //     0x14, 0xa9, 0x04, 0x85, 0x11, 0x85, 0x13, 0x85, 0x15, 0x60, 0xa5, 0xfe, 0x85, 0x00, 0xa5, 0xfe,
+        //     0x29, 0x03, 0x18, 0x69, 0x02, 0x85, 0x01, 0x60, 0x20, 0x4d, 0x06, 0x20, 0x8d, 0x06, 0x20, 0xc3,
+        //     0x06, 0x20, 0x19, 0x07, 0x20, 0x20, 0x07, 0x20, 0x2d, 0x07, 0x4c, 0x38, 0x06, 0xa5, 0xff, 0xc9,
+        //     0x77, 0xf0, 0x0d, 0xc9, 0x64, 0xf0, 0x14, 0xc9, 0x73, 0xf0, 0x1b, 0xc9, 0x61, 0xf0, 0x22, 0x60,
+        //     0xa9, 0x04, 0x24, 0x02, 0xd0, 0x26, 0xa9, 0x01, 0x85, 0x02, 0x60, 0xa9, 0x08, 0x24, 0x02, 0xd0,
+        //     0x1b, 0xa9, 0x02, 0x85, 0x02, 0x60, 0xa9, 0x01, 0x24, 0x02, 0xd0, 0x10, 0xa9, 0x04, 0x85, 0x02,
+        //     0x60, 0xa9, 0x02, 0x24, 0x02, 0xd0, 0x05, 0xa9, 0x08, 0x85, 0x02, 0x60, 0x60, 0x20, 0x94, 0x06,
+        //     0x20, 0xa8, 0x06, 0x60, 0xa5, 0x00, 0xc5, 0x10, 0xd0, 0x0d, 0xa5, 0x01, 0xc5, 0x11, 0xd0, 0x07,
+        //     0xe6, 0x03, 0xe6, 0x03, 0x20, 0x2a, 0x06, 0x60, 0xa2, 0x02, 0xb5, 0x10, 0xc5, 0x10, 0xd0, 0x06,
+        //     0xb5, 0x11, 0xc5, 0x11, 0xf0, 0x09, 0xe8, 0xe8, 0xe4, 0x03, 0xf0, 0x06, 0x4c, 0xaa, 0x06, 0x4c,
+        //     0x35, 0x07, 0x60, 0xa6, 0x03, 0xca, 0x8a, 0xb5, 0x10, 0x95, 0x12, 0xca, 0x10, 0xf9, 0xa5, 0x02,
+        //     0x4a, 0xb0, 0x09, 0x4a, 0xb0, 0x19, 0x4a, 0xb0, 0x1f, 0x4a, 0xb0, 0x2f, 0xa5, 0x10, 0x38, 0xe9,
+        //     0x20, 0x85, 0x10, 0x90, 0x01, 0x60, 0xc6, 0x11, 0xa9, 0x01, 0xc5, 0x11, 0xf0, 0x28, 0x60, 0xe6,
+        //     0x10, 0xa9, 0x1f, 0x24, 0x10, 0xf0, 0x1f, 0x60, 0xa5, 0x10, 0x18, 0x69, 0x20, 0x85, 0x10, 0xb0,
+        //     0x01, 0x60, 0xe6, 0x11, 0xa9, 0x06, 0xc5, 0x11, 0xf0, 0x0c, 0x60, 0xc6, 0x10, 0xa5, 0x10, 0x29,
+        //     0x1f, 0xc9, 0x1f, 0xf0, 0x01, 0x60, 0x4c, 0x35, 0x07, 0xa0, 0x00, 0xa5, 0xfe, 0x91, 0x00, 0x60,
+        //     0xa6, 0x03, 0xa9, 0x00, 0x81, 0x10, 0xa2, 0x00, 0xa9, 0x01, 0x81, 0x10, 0x60, 0xa2, 0x00, 0xea,
+        //     0xea, 0xca, 0xd0, 0xfb, 0x60,
+        // ];
+        //
+        // cpu.load(game_code);
+        //
+        // cpu.reset();
+        //
+        // cpu.run_with_callback(move |cpu| {});
     }
 }
