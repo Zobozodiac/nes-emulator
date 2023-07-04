@@ -1,21 +1,13 @@
 use crate::bus::Bus;
 use crate::cartridge::{Cartridge, CHR_ROM_PAGE_SIZE, PRG_ROM_PAGE_SIZE};
 use crate::memory::Mem;
+use crate::opcodes;
+use crate::opcodes::{AddressingMode, OpCode};
+use crate::status;
 use crate::status::Flag;
-use opcodes::{AddressingMode, OpCode};
 use std::ops::Add;
 
 // TODO the program counter will be implemented incorrectly when using brk and the jmp commands because it always will increase by 1 afterwards but it should ignore it. Need to find best place to define.
-
-pub mod memory;
-
-pub mod bus;
-
-pub mod opcodes;
-
-pub mod status;
-
-pub mod cartridge;
 
 pub struct CPU {
     register_a: u8,

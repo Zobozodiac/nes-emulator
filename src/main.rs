@@ -1,6 +1,3 @@
-use nes_emulator;
-use nes_emulator::cartridge::Cartridge;
-use nes_emulator::CPU;
 use rand::thread_rng;
 use rand::Rng;
 use sdl2::event::Event;
@@ -10,7 +7,14 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::EventPump;
 use std::fs;
 
-fn handle_user_input(cpu: &mut CPU, event_pump: &mut EventPump) {
+pub mod bus;
+pub mod cartridge;
+pub mod cpu;
+pub mod memory;
+pub mod opcodes;
+pub mod status;
+
+fn handle_user_input(cpu: &mut cpu::CPU, event_pump: &mut EventPump) {
     for event in event_pump.poll_iter() {
         match event {
             Event::Quit { .. }
@@ -61,7 +65,7 @@ fn color(byte: u8) -> Color {
     }
 }
 
-fn read_screen_state(cpu: &CPU, frame: &mut [u8; 32 * 3 * 32]) -> bool {
+fn read_screen_state(cpu: &cpu::CPU, frame: &mut [u8; 32 * 3 * 32]) -> bool {
     let mut frame_idx = 0;
     let mut update = false;
     for i in 0x0200..0x600 {
@@ -147,5 +151,5 @@ fn main() {
 
     let raw = fs::read(file_name).expect("nestest.nes not found");
 
-    let cartridge = Cartridge::new(&raw);
+    let cartridge = cartridge::Cartridge::new(&raw);
 }
