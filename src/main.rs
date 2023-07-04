@@ -1,3 +1,5 @@
+use std::fs;
+
 use rand::thread_rng;
 use rand::Rng;
 use sdl2::event::Event;
@@ -5,7 +7,6 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::EventPump;
-use std::fs;
 
 pub mod bus;
 pub mod cartridge;
@@ -152,4 +153,8 @@ fn main() {
     let raw = fs::read(file_name).expect("nestest.nes not found");
 
     let cartridge = cartridge::Cartridge::new(&raw);
+
+    let mut cpu = cpu::CPU::new(cartridge);
+
+    cpu.run();
 }
