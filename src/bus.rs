@@ -7,6 +7,8 @@ const CPU_RAM_START: u16 = 0x0000;
 const CPU_MEMORY_END: u16 = 0x1fff;
 const PPU_RAM_START: u16 = 0x2000;
 const PPU_MEMORY_END: u16 = 0x3fff;
+const CARTRIDGE_ROM_START: u16 = 0x8000;
+const CARTRIDGE_ROM_END: u16 = 0xffff;
 
 pub struct Bus {
     cpu_ram: Storage,
@@ -24,6 +26,9 @@ impl Mem for Bus {
                 let address = address & 0b00000000_00000111;
                 panic!("PPU not implemented yet.");
             }
+            CARTRIDGE_ROM_START..=CARTRIDGE_ROM_END => {
+                panic!("Writing to cartridge ROM")
+            }
             _ => {
                 panic!("Writing to address out of range {}", address);
             }
@@ -39,6 +44,13 @@ impl Mem for Bus {
             PPU_RAM_START..=PPU_MEMORY_END => {
                 let address = address & 0b00000000_00000111;
                 panic!("PPU not implemented yet.");
+            }
+            CARTRIDGE_ROM_START..=CARTRIDGE_ROM_END => {
+                let mut address = address - 0x8000;
+                if self.cartridge.prg_rom.len() == 0x4000 && address >= 0x4000 {
+                    address = address % 0x4000;
+                }
+                self.cartridge.prg_rom[address as usize]
             }
             _ => {
                 panic!("Reading to address out of range {}", address);

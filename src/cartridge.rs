@@ -10,10 +10,10 @@ pub enum Mirroring {
 }
 
 pub struct Cartridge {
-    prg_rom: Vec<u8>,
-    chr_rom: Vec<u8>,
-    mapper_type: u8,
-    mirroring_type: Mirroring,
+    pub prg_rom: Vec<u8>,
+    pub chr_rom: Vec<u8>,
+    pub mapper_type: u8,
+    pub mirroring_type: Mirroring,
 }
 
 impl Cartridge {

@@ -1,7 +1,8 @@
-use nes_emulator::bus::Bus;
-use nes_emulator::{cartridge, cpu};
 use std::fs;
-use std::rc::Rc;
+
+use nes_emulator::{cartridge, cpu};
+use nes_emulator::bus::Bus;
+use nes_emulator::cpu::CPU;
 
 fn main() {
     let file_name = "nestest/nestest.nes";
@@ -23,4 +24,8 @@ fn main() {
         println!("status_byte: {:b}", cpu.status.get_status_byte());
         println!();
     });
+}
+
+fn trace(cpu: &CPU) {
+
 }
