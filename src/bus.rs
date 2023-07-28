@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use crate::cartridge::Cartridge;
 use crate::memory::{Mem, Storage};
 
@@ -23,7 +25,7 @@ impl Mem for Bus {
                 panic!("PPU not implemented yet.");
             }
             _ => {
-                println!("Writing to address out of range {}", address);
+                panic!("Writing to address out of range {}", address);
             }
         }
     }
@@ -39,8 +41,7 @@ impl Mem for Bus {
                 panic!("PPU not implemented yet.");
             }
             _ => {
-                println!("Reading to address out of range {}", address);
-                0
+                panic!("Reading to address out of range {}", address);
             }
         }
     }
@@ -50,7 +51,7 @@ impl Bus {
     pub fn new(cartridge: Cartridge) -> Self {
         Bus {
             cpu_ram: Storage::new(2048),
-            cartridge: cartridge,
+            cartridge,
         }
     }
 }

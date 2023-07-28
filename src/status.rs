@@ -34,6 +34,17 @@ impl Status {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.negative = false;
+        self.overflow = false;
+        self.ignored = false;
+        self.break_flag = false;
+        self.decimal = false;
+        self.interrupt = false;
+        self.zero = false;
+        self.carry = false;
+    }
+
     pub fn set_flag(&mut self, flag: Flag, value: bool) {
         match flag {
             Flag::Negative => {
@@ -71,6 +82,24 @@ impl Status {
     /// Helper function to set the zero flag based on if a byte is zero or not.
     pub fn set_zero_flag(&mut self, value: u8) {
         self.set_flag(Flag::Zero, value == 0);
+    }
+
+    pub fn set_decrement_flags(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(0b1111_1111);
+
+        self.set_zero_flag(result);
+        self.set_negative_flag(result);
+
+        return result;
+    }
+
+    pub fn set_increment_flags(&mut self, value: u8) -> u8 {
+        let result = value.wrapping_add(1);
+
+        self.set_zero_flag(result);
+        self.set_negative_flag(result);
+
+        return result;
     }
 
     pub fn read_flag(&self, flag: Flag) -> bool {
