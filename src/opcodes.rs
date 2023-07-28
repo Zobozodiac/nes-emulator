@@ -154,8 +154,167 @@ pub enum OpCode {
     Xfe,
 }
 
+pub fn get_opcode(code: &u8) -> OpCode {
+    match code {
+        0x00 => OpCode::X00,
+        0x01 => OpCode::X01,
+        0x05 => OpCode::X05,
+        0x06 => OpCode::X06,
+        0x08 => OpCode::X08,
+        0x09 => OpCode::X09,
+        0x0a => OpCode::X0a,
+        0x0d => OpCode::X0d,
+        0x0e => OpCode::X0e,
+        0x10 => OpCode::X10,
+        0x11 => OpCode::X11,
+        0x15 => OpCode::X15,
+        0x16 => OpCode::X16,
+        0x18 => OpCode::X18,
+        0x19 => OpCode::X19,
+        0x1d => OpCode::X1d,
+        0x1e => OpCode::X1e,
+        0x20 => OpCode::X20,
+        0x21 => OpCode::X21,
+        0x24 => OpCode::X24,
+        0x25 => OpCode::X25,
+        0x26 => OpCode::X26,
+        0x28 => OpCode::X28,
+        0x29 => OpCode::X29,
+        0x2a => OpCode::X2a,
+        0x2c => OpCode::X2c,
+        0x2d => OpCode::X2d,
+        0x2e => OpCode::X2e,
+        0x30 => OpCode::X30,
+        0x31 => OpCode::X31,
+        0x35 => OpCode::X35,
+        0x36 => OpCode::X36,
+        0x38 => OpCode::X38,
+        0x39 => OpCode::X39,
+        0x3d => OpCode::X3d,
+        0x3e => OpCode::X3e,
+        0x40 => OpCode::X40,
+        0x41 => OpCode::X41,
+        0x45 => OpCode::X45,
+        0x46 => OpCode::X46,
+        0x48 => OpCode::X48,
+        0x49 => OpCode::X49,
+        0x4a => OpCode::X4a,
+        0x4c => OpCode::X4c,
+        0x4d => OpCode::X4d,
+        0x4e => OpCode::X4e,
+        0x50 => OpCode::X50,
+        0x51 => OpCode::X51,
+        0x55 => OpCode::X55,
+        0x56 => OpCode::X56,
+        0x58 => OpCode::X58,
+        0x59 => OpCode::X59,
+        0x5d => OpCode::X5d,
+        0x5e => OpCode::X5e,
+        0x60 => OpCode::X60,
+        0x61 => OpCode::X61,
+        0x65 => OpCode::X65,
+        0x66 => OpCode::X66,
+        0x68 => OpCode::X68,
+        0x69 => OpCode::X69,
+        0x6a => OpCode::X6a,
+        0x6c => OpCode::X6c,
+        0x6d => OpCode::X6d,
+        0x6e => OpCode::X6e,
+        0x70 => OpCode::X70,
+        0x71 => OpCode::X71,
+        0x75 => OpCode::X75,
+        0x76 => OpCode::X76,
+        0x78 => OpCode::X78,
+        0x79 => OpCode::X79,
+        0x7d => OpCode::X7d,
+        0x7e => OpCode::X7e,
+        0x81 => OpCode::X81,
+        0x84 => OpCode::X84,
+        0x85 => OpCode::X85,
+        0x86 => OpCode::X86,
+        0x88 => OpCode::X88,
+        0x8a => OpCode::X8a,
+        0x8c => OpCode::X8c,
+        0x8d => OpCode::X8d,
+        0x8e => OpCode::X8e,
+        0x90 => OpCode::X90,
+        0x91 => OpCode::X91,
+        0x94 => OpCode::X94,
+        0x95 => OpCode::X95,
+        0x96 => OpCode::X96,
+        0x98 => OpCode::X98,
+        0x99 => OpCode::X99,
+        0x9a => OpCode::X9a,
+        0x9d => OpCode::X9d,
+        0xa0 => OpCode::Xa0,
+        0xa1 => OpCode::Xa1,
+        0xa2 => OpCode::Xa2,
+        0xa4 => OpCode::Xa4,
+        0xa5 => OpCode::Xa5,
+        0xa6 => OpCode::Xa6,
+        0xa8 => OpCode::Xa8,
+        0xa9 => OpCode::Xa9,
+        0xaa => OpCode::Xaa,
+        0xac => OpCode::Xac,
+        0xad => OpCode::Xad,
+        0xae => OpCode::Xae,
+        0xb0 => OpCode::Xb0,
+        0xb1 => OpCode::Xb1,
+        0xb4 => OpCode::Xb4,
+        0xb5 => OpCode::Xb5,
+        0xb6 => OpCode::Xb6,
+        0xb8 => OpCode::Xb8,
+        0xb9 => OpCode::Xb9,
+        0xba => OpCode::Xba,
+        0xbc => OpCode::Xbc,
+        0xbd => OpCode::Xbd,
+        0xbe => OpCode::Xbe,
+        0xc0 => OpCode::Xc0,
+        0xc1 => OpCode::Xc1,
+        0xc4 => OpCode::Xc4,
+        0xc5 => OpCode::Xc5,
+        0xc6 => OpCode::Xc6,
+        0xc8 => OpCode::Xc8,
+        0xc9 => OpCode::Xc9,
+        0xca => OpCode::Xca,
+        0xcc => OpCode::Xcc,
+        0xcd => OpCode::Xcd,
+        0xce => OpCode::Xce,
+        0xd0 => OpCode::Xd0,
+        0xd1 => OpCode::Xd1,
+        0xd5 => OpCode::Xd5,
+        0xd6 => OpCode::Xd6,
+        0xd8 => OpCode::Xd8,
+        0xd9 => OpCode::Xd9,
+        0xdd => OpCode::Xdd,
+        0xde => OpCode::Xde,
+        0xe0 => OpCode::Xe0,
+        0xe1 => OpCode::Xe1,
+        0xe4 => OpCode::Xe4,
+        0xe5 => OpCode::Xe5,
+        0xe6 => OpCode::Xe6,
+        0xe8 => OpCode::Xe8,
+        0xe9 => OpCode::Xe9,
+        0xea => OpCode::Xea,
+        0xec => OpCode::Xec,
+        0xed => OpCode::Xed,
+        0xee => OpCode::Xee,
+        0xf0 => OpCode::Xf0,
+        0xf1 => OpCode::Xf1,
+        0xf5 => OpCode::Xf5,
+        0xf6 => OpCode::Xf6,
+        0xf8 => OpCode::Xf8,
+        0xf9 => OpCode::Xf9,
+        0xfd => OpCode::Xfd,
+        0xfe => OpCode::Xfe,
+        _ => {
+            panic!("Unknown OpCode")
+        }
+    }
+}
+
 pub struct OpCodeDetail {
-    pub name: &'static str,
+    pub instruction: Instruction,
     pub bytes: u8,
     pub cycles: i8,
     pub address_mode: AddressingMode,
@@ -177,317 +336,972 @@ pub enum AddressingMode {
     Accumulator,
 }
 
-pub fn get_opcode_detail(op_code: OpCode) -> OpCodeDetail {
-    match op_code {
-        OpCode::X00 => OpCodeDetail::new("BRK", 1, 7, AddressingMode::Implied),
-        OpCode::X01 => OpCodeDetail::new("ORA", 2, 6, AddressingMode::IndirectX),
-        OpCode::X05 => OpCodeDetail::new("ORA", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X06 => OpCodeDetail::new("ASL", 2, 5, AddressingMode::ZeroPage),
-        OpCode::X08 => OpCodeDetail::new("PHP", 1, 3, AddressingMode::Implied),
-        OpCode::X09 => OpCodeDetail::new("ORA", 2, 2, AddressingMode::Immediate),
-        OpCode::X0a => OpCodeDetail::new("ASL", 1, 2, AddressingMode::Accumulator),
-        OpCode::X0d => OpCodeDetail::new("ORA", 3, 4, AddressingMode::Absolute),
-        OpCode::X0e => OpCodeDetail::new("ASL", 3, 6, AddressingMode::Absolute),
-        OpCode::X10 => OpCodeDetail::new("BPL", 2, 2, AddressingMode::Relative),
-        OpCode::X11 => OpCodeDetail::new("ORA", 2, 5, AddressingMode::IndirectY),
-        OpCode::X15 => OpCodeDetail::new("ORA", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::X16 => OpCodeDetail::new("ASL", 2, 6, AddressingMode::ZeroPageX),
-        OpCode::X18 => OpCodeDetail::new("CLC", 1, 2, AddressingMode::Implied),
-        OpCode::X19 => OpCodeDetail::new("ORA", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::X1d => OpCodeDetail::new("ORA", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::X1e => OpCodeDetail::new("ASL", 3, 7, AddressingMode::AbsoluteX),
-        OpCode::X20 => OpCodeDetail::new("JSR", 3, 6, AddressingMode::Absolute),
-        OpCode::X21 => OpCodeDetail::new("AND", 2, 6, AddressingMode::IndirectX),
-        OpCode::X24 => OpCodeDetail::new("BIT", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X25 => OpCodeDetail::new("AND", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X26 => OpCodeDetail::new("ROL", 2, 5, AddressingMode::ZeroPage),
-        OpCode::X28 => OpCodeDetail::new("PLP", 1, 4, AddressingMode::Implied),
-        OpCode::X29 => OpCodeDetail::new("AND", 2, 2, AddressingMode::Immediate),
-        OpCode::X2a => OpCodeDetail::new("ROL", 1, 2, AddressingMode::Accumulator),
-        OpCode::X2c => OpCodeDetail::new("BIT", 3, 4, AddressingMode::Absolute),
-        OpCode::X2d => OpCodeDetail::new("AND", 3, 4, AddressingMode::Absolute),
-        OpCode::X2e => OpCodeDetail::new("ROL", 3, 6, AddressingMode::Absolute),
-        OpCode::X30 => OpCodeDetail::new("BMI", 2, 2, AddressingMode::Relative),
-        OpCode::X31 => OpCodeDetail::new("AND", 2, 5, AddressingMode::IndirectY),
-        OpCode::X35 => OpCodeDetail::new("AND", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::X36 => OpCodeDetail::new("ROL", 2, 6, AddressingMode::ZeroPageX),
-        OpCode::X38 => OpCodeDetail::new("SEC", 1, 2, AddressingMode::Implied),
-        OpCode::X39 => OpCodeDetail::new("AND", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::X3d => OpCodeDetail::new("AND", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::X3e => OpCodeDetail::new("ROL", 3, 7, AddressingMode::AbsoluteX),
-        OpCode::X40 => OpCodeDetail::new("RTI", 1, 6, AddressingMode::Implied),
-        OpCode::X41 => OpCodeDetail::new("EOR", 2, 6, AddressingMode::IndirectX),
-        OpCode::X45 => OpCodeDetail::new("EOR", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X46 => OpCodeDetail::new("LSR", 2, 5, AddressingMode::ZeroPage),
-        OpCode::X48 => OpCodeDetail::new("PHA", 1, 3, AddressingMode::Implied),
-        OpCode::X49 => OpCodeDetail::new("EOR", 2, 2, AddressingMode::Immediate),
-        OpCode::X4a => OpCodeDetail::new("LSR", 1, 2, AddressingMode::Accumulator),
-        OpCode::X4c => OpCodeDetail::new("JMP", 3, 3, AddressingMode::Absolute),
-        OpCode::X4d => OpCodeDetail::new("EOR", 3, 4, AddressingMode::Absolute),
-        OpCode::X4e => OpCodeDetail::new("LSR", 3, 6, AddressingMode::Absolute),
-        OpCode::X50 => OpCodeDetail::new("BVC", 2, 2, AddressingMode::Relative),
-        OpCode::X51 => OpCodeDetail::new("EOR", 2, 5, AddressingMode::IndirectY),
-        OpCode::X55 => OpCodeDetail::new("EOR", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::X56 => OpCodeDetail::new("LSR", 2, 6, AddressingMode::ZeroPageX),
-        OpCode::X58 => OpCodeDetail::new("CLI", 1, 2, AddressingMode::Implied),
-        OpCode::X59 => OpCodeDetail::new("EOR", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::X5d => OpCodeDetail::new("EOR", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::X5e => OpCodeDetail::new("LSR", 3, 7, AddressingMode::AbsoluteX),
-        OpCode::X60 => OpCodeDetail::new("RTS", 1, 6, AddressingMode::Implied),
-        OpCode::X61 => OpCodeDetail::new("ADC", 2, 6, AddressingMode::IndirectX),
-        OpCode::X65 => OpCodeDetail::new("ADC", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X66 => OpCodeDetail::new("ROR", 2, 5, AddressingMode::ZeroPage),
-        OpCode::X68 => OpCodeDetail::new("PLA", 1, 4, AddressingMode::Implied),
-        OpCode::X69 => OpCodeDetail::new("ADC", 2, 2, AddressingMode::Immediate),
-        OpCode::X6a => OpCodeDetail::new("ROR", 1, 2, AddressingMode::Accumulator),
-        OpCode::X6c => OpCodeDetail::new("JMP", 3, 5, AddressingMode::Indirect),
-        OpCode::X6d => OpCodeDetail::new("ADC", 3, 4, AddressingMode::Absolute),
-        OpCode::X6e => OpCodeDetail::new("ROR", 3, 6, AddressingMode::Absolute),
-        OpCode::X70 => OpCodeDetail::new("BVS", 2, 2, AddressingMode::Relative),
-        OpCode::X71 => OpCodeDetail::new("ADC", 2, 5, AddressingMode::IndirectY),
-        OpCode::X75 => OpCodeDetail::new("ADC", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::X76 => OpCodeDetail::new("ROR", 2, 6, AddressingMode::ZeroPageX),
-        OpCode::X78 => OpCodeDetail::new("SEI", 1, 2, AddressingMode::Implied),
-        OpCode::X79 => OpCodeDetail::new("ADC", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::X7d => OpCodeDetail::new("ADC", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::X7e => OpCodeDetail::new("ROR", 3, 7, AddressingMode::AbsoluteX),
-        OpCode::X81 => OpCodeDetail::new("STA", 2, 6, AddressingMode::IndirectX),
-        OpCode::X84 => OpCodeDetail::new("STY", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X85 => OpCodeDetail::new("STA", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X86 => OpCodeDetail::new("STX", 2, 3, AddressingMode::ZeroPage),
-        OpCode::X88 => OpCodeDetail::new("DEY", 1, 2, AddressingMode::Implied),
-        OpCode::X8a => OpCodeDetail::new("TXA", 1, 2, AddressingMode::Implied),
-        OpCode::X8c => OpCodeDetail::new("STY", 3, 4, AddressingMode::Absolute),
-        OpCode::X8d => OpCodeDetail::new("STA", 3, 4, AddressingMode::Absolute),
-        OpCode::X8e => OpCodeDetail::new("STX", 3, 4, AddressingMode::Absolute),
-        OpCode::X90 => OpCodeDetail::new("BCC", 2, 2, AddressingMode::Relative),
-        OpCode::X91 => OpCodeDetail::new("STA", 2, 6, AddressingMode::IndirectY),
-        OpCode::X94 => OpCodeDetail::new("STY", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::X95 => OpCodeDetail::new("STA", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::X96 => OpCodeDetail::new("STX", 2, 4, AddressingMode::ZeroPageY),
-        OpCode::X98 => OpCodeDetail::new("TYA", 1, 2, AddressingMode::Implied),
-        OpCode::X99 => OpCodeDetail::new("STA", 3, 5, AddressingMode::AbsoluteY),
-        OpCode::X9a => OpCodeDetail::new("TXS", 1, 2, AddressingMode::Implied),
-        OpCode::X9d => OpCodeDetail::new("STA", 3, 5, AddressingMode::AbsoluteX),
-        OpCode::Xa0 => OpCodeDetail::new("LDY", 2, 2, AddressingMode::Immediate),
-        OpCode::Xa1 => OpCodeDetail::new("LDA", 2, 6, AddressingMode::IndirectX),
-        OpCode::Xa2 => OpCodeDetail::new("LDX", 2, 2, AddressingMode::Immediate),
-        OpCode::Xa4 => OpCodeDetail::new("LDY", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xa5 => OpCodeDetail::new("LDA", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xa6 => OpCodeDetail::new("LDX", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xa8 => OpCodeDetail::new("TAY", 1, 2, AddressingMode::Implied),
-        OpCode::Xa9 => OpCodeDetail::new("LDA", 2, 2, AddressingMode::Immediate),
-        OpCode::Xaa => OpCodeDetail::new("TAX", 1, 2, AddressingMode::Implied),
-        OpCode::Xac => OpCodeDetail::new("LDY", 3, 4, AddressingMode::Absolute),
-        OpCode::Xad => OpCodeDetail::new("LDA", 3, 4, AddressingMode::Absolute),
-        OpCode::Xae => OpCodeDetail::new("LDX", 3, 4, AddressingMode::Absolute),
-        OpCode::Xb0 => OpCodeDetail::new("BCS", 2, 2, AddressingMode::Relative),
-        OpCode::Xb1 => OpCodeDetail::new("LDA", 2, 5, AddressingMode::IndirectY),
-        OpCode::Xb4 => OpCodeDetail::new("LDY", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::Xb5 => OpCodeDetail::new("LDA", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::Xb6 => OpCodeDetail::new("LDX", 2, 4, AddressingMode::ZeroPageY),
-        OpCode::Xb8 => OpCodeDetail::new("CLV", 1, 2, AddressingMode::Implied),
-        OpCode::Xb9 => OpCodeDetail::new("LDA", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::Xba => OpCodeDetail::new("TSX", 1, 2, AddressingMode::Implied),
-        OpCode::Xbc => OpCodeDetail::new("LDY", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::Xbd => OpCodeDetail::new("LDA", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::Xbe => OpCodeDetail::new("LDX", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::Xc0 => OpCodeDetail::new("CPY", 2, 2, AddressingMode::Immediate),
-        OpCode::Xc1 => OpCodeDetail::new("CMP", 2, 6, AddressingMode::IndirectX),
-        OpCode::Xc4 => OpCodeDetail::new("CPY", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xc5 => OpCodeDetail::new("CMP", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xc6 => OpCodeDetail::new("DEC", 2, 5, AddressingMode::ZeroPage),
-        OpCode::Xc8 => OpCodeDetail::new("INY", 1, 2, AddressingMode::Implied),
-        OpCode::Xc9 => OpCodeDetail::new("CMP", 2, 2, AddressingMode::Immediate),
-        OpCode::Xca => OpCodeDetail::new("DEX", 1, 2, AddressingMode::Implied),
-        OpCode::Xcc => OpCodeDetail::new("CPY", 3, 4, AddressingMode::Absolute),
-        OpCode::Xcd => OpCodeDetail::new("CMP", 3, 4, AddressingMode::Absolute),
-        OpCode::Xce => OpCodeDetail::new("DEC", 3, 6, AddressingMode::Absolute),
-        OpCode::Xd0 => OpCodeDetail::new("BNE", 2, 2, AddressingMode::Relative),
-        OpCode::Xd1 => OpCodeDetail::new("CMP", 2, 5, AddressingMode::IndirectY),
-        OpCode::Xd5 => OpCodeDetail::new("CMP", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::Xd6 => OpCodeDetail::new("DEC", 2, 6, AddressingMode::ZeroPageX),
-        OpCode::Xd8 => OpCodeDetail::new("CLD", 1, 2, AddressingMode::Implied),
-        OpCode::Xd9 => OpCodeDetail::new("CMP", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::Xdd => OpCodeDetail::new("CMP", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::Xde => OpCodeDetail::new("DEC", 3, 7, AddressingMode::AbsoluteX),
-        OpCode::Xe0 => OpCodeDetail::new("CPX", 2, 2, AddressingMode::Immediate),
-        OpCode::Xe1 => OpCodeDetail::new("SBC", 2, 6, AddressingMode::IndirectX),
-        OpCode::Xe4 => OpCodeDetail::new("CPX", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xe5 => OpCodeDetail::new("SBC", 2, 3, AddressingMode::ZeroPage),
-        OpCode::Xe6 => OpCodeDetail::new("INC", 2, 5, AddressingMode::ZeroPage),
-        OpCode::Xe8 => OpCodeDetail::new("INX", 1, 2, AddressingMode::Implied),
-        OpCode::Xe9 => OpCodeDetail::new("SBC", 2, 2, AddressingMode::Immediate),
-        OpCode::Xea => OpCodeDetail::new("NOP", 1, 2, AddressingMode::Implied),
-        OpCode::Xec => OpCodeDetail::new("CPX", 3, 4, AddressingMode::Absolute),
-        OpCode::Xed => OpCodeDetail::new("SBC", 3, 4, AddressingMode::Absolute),
-        OpCode::Xee => OpCodeDetail::new("INC", 3, 6, AddressingMode::Absolute),
-        OpCode::Xf0 => OpCodeDetail::new("BEQ", 2, 2, AddressingMode::Relative),
-        OpCode::Xf1 => OpCodeDetail::new("SBC", 2, 5, AddressingMode::IndirectY),
-        OpCode::Xf5 => OpCodeDetail::new("SBC", 2, 4, AddressingMode::ZeroPageX),
-        OpCode::Xf6 => OpCodeDetail::new("INC", 2, 6, AddressingMode::ZeroPageX),
-        OpCode::Xf8 => OpCodeDetail::new("SED", 1, 2, AddressingMode::Implied),
-        OpCode::Xf9 => OpCodeDetail::new("SBC", 3, 4, AddressingMode::AbsoluteY),
-        OpCode::Xfd => OpCodeDetail::new("SBC", 3, 4, AddressingMode::AbsoluteX),
-        OpCode::Xfe => OpCodeDetail::new("INC", 3, 7, AddressingMode::AbsoluteX),
-    }
+pub enum Instruction {
+    BRK,
+    PHP,
+    BPL,
+    CLC,
+    ORA,
+    ASL,
+    JSR,
+    PLP,
+    BIT,
+    BMI,
+    SEC,
+    AND,
+    ROL,
+    RTI,
+    PHA,
+    BVC,
+    CLI,
+    EOR,
+    LSR,
+    RTS,
+    PLA,
+    JMP,
+    BVS,
+    SEI,
+    ADC,
+    ROR,
+    DEY,
+    TXA,
+    BCC,
+    STY,
+    STX,
+    TYA,
+    TXS,
+    STA,
+    TAY,
+    TAX,
+    BCS,
+    CLV,
+    TSX,
+    LDY,
+    LDA,
+    LDX,
+    INY,
+    DEX,
+    CPY,
+    BNE,
+    CLD,
+    CMP,
+    DEC,
+    INX,
+    NOP,
+    CPX,
+    BEQ,
+    SED,
+    SBC,
+    INC,
 }
 
-// lazy_static! {
-//     pub static ref OPSCODES_MAP: HashMap<u8, OpCode> = {
-//         let mut codes = HashMap::new();
-//         codes.insert(0x00, OpCode::new("BRK", 1, 7, AddressingMode::Implied));
-//         codes.insert(0x01, OpCode::new("ORA", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0x05, OpCode::new("ORA", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x06, OpCode::new("ASL", 2, 5, AddressingMode::ZeroPage));
-//         codes.insert(0x08, OpCode::new("PHP", 1, 3, AddressingMode::Implied));
-//         codes.insert(0x09, OpCode::new("ORA", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0x0a, OpCode::new("ASL", 1, 2, AddressingMode::Accumulator));
-//         codes.insert(0x0d, OpCode::new("ORA", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x0e, OpCode::new("ASL", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0x10, OpCode::new("BPL", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0x11, OpCode::new("ORA", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0x15, OpCode::new("ORA", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0x16, OpCode::new("ASL", 2, 6, AddressingMode::ZeroPageX));
-//         codes.insert(0x18, OpCode::new("CLC", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x19, OpCode::new("ORA", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0x1d, OpCode::new("ORA", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0x1e, OpCode::new("ASL", 3, 7, AddressingMode::AbsoluteX));
-//         codes.insert(0x20, OpCode::new("JSR", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0x21, OpCode::new("AND", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0x24, OpCode::new("BIT", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x25, OpCode::new("AND", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x26, OpCode::new("ROL", 2, 5, AddressingMode::ZeroPage));
-//         codes.insert(0x28, OpCode::new("PLP", 1, 4, AddressingMode::Implied));
-//         codes.insert(0x29, OpCode::new("AND", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0x2a, OpCode::new("ROL", 1, 2, AddressingMode::Accumulator));
-//         codes.insert(0x2c, OpCode::new("BIT", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x2d, OpCode::new("AND", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x2e, OpCode::new("ROL", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0x30, OpCode::new("BMI", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0x31, OpCode::new("AND", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0x35, OpCode::new("AND", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0x36, OpCode::new("ROL", 2, 6, AddressingMode::ZeroPageX));
-//         codes.insert(0x38, OpCode::new("SEC", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x39, OpCode::new("AND", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0x3d, OpCode::new("AND", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0x3e, OpCode::new("ROL", 3, 7, AddressingMode::AbsoluteX));
-//         codes.insert(0x40, OpCode::new("RTI", 1, 6, AddressingMode::Implied));
-//         codes.insert(0x41, OpCode::new("EOR", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0x45, OpCode::new("EOR", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x46, OpCode::new("LSR", 2, 5, AddressingMode::ZeroPage));
-//         codes.insert(0x48, OpCode::new("PHA", 1, 3, AddressingMode::Implied));
-//         codes.insert(0x49, OpCode::new("EOR", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0x4a, OpCode::new("LSR", 1, 2, AddressingMode::Accumulator));
-//         codes.insert(0x4c, OpCode::new("JMP", 3, 3, AddressingMode::Absolute));
-//         codes.insert(0x4d, OpCode::new("EOR", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x4e, OpCode::new("LSR", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0x50, OpCode::new("BVC", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0x51, OpCode::new("EOR", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0x55, OpCode::new("EOR", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0x56, OpCode::new("LSR", 2, 6, AddressingMode::ZeroPageX));
-//         codes.insert(0x58, OpCode::new("CLI", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x59, OpCode::new("EOR", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0x5d, OpCode::new("EOR", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0x5e, OpCode::new("LSR", 3, 7, AddressingMode::AbsoluteX));
-//         codes.insert(0x60, OpCode::new("RTS", 1, 6, AddressingMode::Implied));
-//         codes.insert(0x61, OpCode::new("ADC", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0x65, OpCode::new("ADC", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x66, OpCode::new("ROR", 2, 5, AddressingMode::ZeroPage));
-//         codes.insert(0x68, OpCode::new("PLA", 1, 4, AddressingMode::Implied));
-//         codes.insert(0x69, OpCode::new("ADC", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0x6a, OpCode::new("ROR", 1, 2, AddressingMode::Accumulator));
-//         codes.insert(0x6c, OpCode::new("JMP", 3, 5, AddressingMode::Indirect));
-//         codes.insert(0x6d, OpCode::new("ADC", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x6e, OpCode::new("ROR", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0x70, OpCode::new("BVS", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0x71, OpCode::new("ADC", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0x75, OpCode::new("ADC", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0x76, OpCode::new("ROR", 2, 6, AddressingMode::ZeroPageX));
-//         codes.insert(0x78, OpCode::new("SEI", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x79, OpCode::new("ADC", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0x7d, OpCode::new("ADC", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0x7e, OpCode::new("ROR", 3, 7, AddressingMode::AbsoluteX));
-//         codes.insert(0x81, OpCode::new("STA", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0x84, OpCode::new("STY", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x85, OpCode::new("STA", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x86, OpCode::new("STX", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0x88, OpCode::new("DEY", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x8a, OpCode::new("TXA", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x8c, OpCode::new("STY", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x8d, OpCode::new("STA", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x8e, OpCode::new("STX", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0x90, OpCode::new("BCC", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0x91, OpCode::new("STA", 2, 6, AddressingMode::IndirectY));
-//         codes.insert(0x94, OpCode::new("STY", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0x95, OpCode::new("STA", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0x96, OpCode::new("STX", 2, 4, AddressingMode::ZeroPageY));
-//         codes.insert(0x98, OpCode::new("TYA", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x99, OpCode::new("STA", 3, 5, AddressingMode::AbsoluteY));
-//         codes.insert(0x9a, OpCode::new("TXS", 1, 2, AddressingMode::Implied));
-//         codes.insert(0x9d, OpCode::new("STA", 3, 5, AddressingMode::AbsoluteX));
-//         codes.insert(0xa0, OpCode::new("LDY", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xa1, OpCode::new("LDA", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0xa2, OpCode::new("LDX", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xa4, OpCode::new("LDY", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xa5, OpCode::new("LDA", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xa6, OpCode::new("LDX", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xa8, OpCode::new("TAY", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xa9, OpCode::new("LDA", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xaa, OpCode::new("TAX", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xac, OpCode::new("LDY", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xad, OpCode::new("LDA", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xae, OpCode::new("LDX", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xb0, OpCode::new("BCS", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0xb1, OpCode::new("LDA", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0xb4, OpCode::new("LDY", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0xb5, OpCode::new("LDA", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0xb6, OpCode::new("LDX", 2, 4, AddressingMode::ZeroPageY));
-//         codes.insert(0xb8, OpCode::new("CLV", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xb9, OpCode::new("LDA",3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0xba, OpCode::new("TSX", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xbc, OpCode::new("LDY", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0xbd, OpCode::new("LDA", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0xbe, OpCode::new("LDX", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0xc0, OpCode::new("CPY", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xc1, OpCode::new("CMP", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0xc4, OpCode::new("CPY", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xc5, OpCode::new("CMP", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xc6, OpCode::new("DEC", 2, 5, AddressingMode::ZeroPage));
-//         codes.insert(0xc8, OpCode::new("INY", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xc9, OpCode::new("CMP", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xca, OpCode::new("DEX", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xcc, OpCode::new("CPY", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xcd, OpCode::new("CMP", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xce, OpCode::new("DEC", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0xd0, OpCode::new("BNE", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0xd1, OpCode::new("CMP", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0xd5, OpCode::new("CMP", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0xd6, OpCode::new("DEC", 2, 6, AddressingMode::ZeroPageX));
-//         codes.insert(0xd8, OpCode::new("CLD", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xd9, OpCode::new("CMP", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0xdd, OpCode::new("CMP", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0xde, OpCode::new("DEC", 3, 7, AddressingMode::AbsoluteX));
-//         codes.insert(0xe0, OpCode::new("CPX", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xe1, OpCode::new("SBC", 2, 6, AddressingMode::IndirectX));
-//         codes.insert(0xe4, OpCode::new("CPX", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xe5, OpCode::new("SBC", 2, 3, AddressingMode::ZeroPage));
-//         codes.insert(0xe6, OpCode::new("INC", 2, 5, AddressingMode::ZeroPage));
-//         codes.insert(0xe8, OpCode::new("INX", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xe9, OpCode::new("SBC", 2, 2, AddressingMode::Immediate));
-//         codes.insert(0xea, OpCode::new("NOP", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xec, OpCode::new("CPX", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xed, OpCode::new("SBC", 3, 4, AddressingMode::Absolute));
-//         codes.insert(0xee, OpCode::new("INC", 3, 6, AddressingMode::Absolute));
-//         codes.insert(0xf0, OpCode::new("BEQ", 2, 2, AddressingMode::Relative)); // extras 2
-//         codes.insert(0xf1, OpCode::new("SBC", 2, 5, AddressingMode::IndirectY)); // extras 1
-//         codes.insert(0xf5, OpCode::new("SBC", 2, 4, AddressingMode::ZeroPageX));
-//         codes.insert(0xf6, OpCode::new("INC", 2, 6, AddressingMode::ZeroPageX));
-//         codes.insert(0xf8, OpCode::new("SED", 1, 2, AddressingMode::Implied));
-//         codes.insert(0xf9, OpCode::new("SBC", 3, 4, AddressingMode::AbsoluteY)); // extras 1
-//         codes.insert(0xfd, OpCode::new("SBC", 3, 4, AddressingMode::AbsoluteX)); // extras 1
-//         codes.insert(0xfe, OpCode::new("INC", 3, 7, AddressingMode::AbsoluteX));
-//
-//         codes
-//     };
-// }
+pub fn get_opcode_detail(op_code: &OpCode) -> OpCodeDetail {
+    match op_code {
+        OpCode::X00 => OpCodeDetail {
+            instruction: Instruction::BRK,
+            bytes: 1,
+            cycles: 7,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X01 => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::X05 => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X06 => OpCodeDetail {
+            instruction: Instruction::ASL,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X08 => OpCodeDetail {
+            instruction: Instruction::PHP,
+            bytes: 1,
+            cycles: 3,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X09 => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::X0a => OpCodeDetail {
+            instruction: Instruction::ASL,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Accumulator,
+        },
+        OpCode::X0d => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X0e => OpCodeDetail {
+            instruction: Instruction::ASL,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X10 => OpCodeDetail {
+            instruction: Instruction::BPL,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::X11 => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::X15 => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X16 => OpCodeDetail {
+            instruction: Instruction::ASL,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X18 => OpCodeDetail {
+            instruction: Instruction::CLC,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X19 => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::X1d => OpCodeDetail {
+            instruction: Instruction::ORA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X1e => OpCodeDetail {
+            instruction: Instruction::ASL,
+            bytes: 3,
+            cycles: 7,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X20 => OpCodeDetail {
+            instruction: Instruction::JSR,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X21 => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::X24 => OpCodeDetail {
+            instruction: Instruction::BIT,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X25 => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X26 => OpCodeDetail {
+            instruction: Instruction::ROL,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X28 => OpCodeDetail {
+            instruction: Instruction::PLP,
+            bytes: 1,
+            cycles: 4,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X29 => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::X2a => OpCodeDetail {
+            instruction: Instruction::ROL,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Accumulator,
+        },
+        OpCode::X2c => OpCodeDetail {
+            instruction: Instruction::BIT,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X2d => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X2e => OpCodeDetail {
+            instruction: Instruction::ROL,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X30 => OpCodeDetail {
+            instruction: Instruction::BMI,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::X31 => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::X35 => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X36 => OpCodeDetail {
+            instruction: Instruction::ROL,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X38 => OpCodeDetail {
+            instruction: Instruction::SEC,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X39 => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::X3d => OpCodeDetail {
+            instruction: Instruction::AND,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X3e => OpCodeDetail {
+            instruction: Instruction::ROL,
+            bytes: 3,
+            cycles: 7,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X40 => OpCodeDetail {
+            instruction: Instruction::RTI,
+            bytes: 1,
+            cycles: 6,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X41 => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::X45 => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X46 => OpCodeDetail {
+            instruction: Instruction::LSR,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X48 => OpCodeDetail {
+            instruction: Instruction::PHA,
+            bytes: 1,
+            cycles: 3,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X49 => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::X4a => OpCodeDetail {
+            instruction: Instruction::LSR,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Accumulator,
+        },
+        OpCode::X4c => OpCodeDetail {
+            instruction: Instruction::JMP,
+            bytes: 3,
+            cycles: 3,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X4d => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X4e => OpCodeDetail {
+            instruction: Instruction::LSR,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X50 => OpCodeDetail {
+            instruction: Instruction::BVC,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::X51 => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::X55 => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X56 => OpCodeDetail {
+            instruction: Instruction::LSR,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X58 => OpCodeDetail {
+            instruction: Instruction::CLI,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X59 => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::X5d => OpCodeDetail {
+            instruction: Instruction::EOR,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X5e => OpCodeDetail {
+            instruction: Instruction::LSR,
+            bytes: 3,
+            cycles: 7,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X60 => OpCodeDetail {
+            instruction: Instruction::RTS,
+            bytes: 1,
+            cycles: 6,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X61 => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::X65 => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X66 => OpCodeDetail {
+            instruction: Instruction::ROR,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X68 => OpCodeDetail {
+            instruction: Instruction::PLA,
+            bytes: 1,
+            cycles: 4,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X69 => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::X6a => OpCodeDetail {
+            instruction: Instruction::ROR,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Accumulator,
+        },
+        OpCode::X6c => OpCodeDetail {
+            instruction: Instruction::JMP,
+            bytes: 3,
+            cycles: 5,
+            address_mode: AddressingMode::Indirect,
+        },
+        OpCode::X6d => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X6e => OpCodeDetail {
+            instruction: Instruction::ROR,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X70 => OpCodeDetail {
+            instruction: Instruction::BVS,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::X71 => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::X75 => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X76 => OpCodeDetail {
+            instruction: Instruction::ROR,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X78 => OpCodeDetail {
+            instruction: Instruction::SEI,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X79 => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::X7d => OpCodeDetail {
+            instruction: Instruction::ADC,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X7e => OpCodeDetail {
+            instruction: Instruction::ROR,
+            bytes: 3,
+            cycles: 7,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::X81 => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::X84 => OpCodeDetail {
+            instruction: Instruction::STY,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X85 => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X86 => OpCodeDetail {
+            instruction: Instruction::STX,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::X88 => OpCodeDetail {
+            instruction: Instruction::DEY,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X8a => OpCodeDetail {
+            instruction: Instruction::TXA,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X8c => OpCodeDetail {
+            instruction: Instruction::STY,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X8d => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X8e => OpCodeDetail {
+            instruction: Instruction::STX,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::X90 => OpCodeDetail {
+            instruction: Instruction::BCC,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::X91 => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::X94 => OpCodeDetail {
+            instruction: Instruction::STY,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X95 => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::X96 => OpCodeDetail {
+            instruction: Instruction::STX,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageY,
+        },
+        OpCode::X98 => OpCodeDetail {
+            instruction: Instruction::TYA,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X99 => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 3,
+            cycles: 5,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::X9a => OpCodeDetail {
+            instruction: Instruction::TXS,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::X9d => OpCodeDetail {
+            instruction: Instruction::STA,
+            bytes: 3,
+            cycles: 5,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::Xa0 => OpCodeDetail {
+            instruction: Instruction::LDY,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xa1 => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::Xa2 => OpCodeDetail {
+            instruction: Instruction::LDX,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xa4 => OpCodeDetail {
+            instruction: Instruction::LDY,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xa5 => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xa6 => OpCodeDetail {
+            instruction: Instruction::LDX,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xa8 => OpCodeDetail {
+            instruction: Instruction::TAY,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xa9 => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xaa => OpCodeDetail {
+            instruction: Instruction::TAX,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xac => OpCodeDetail {
+            instruction: Instruction::LDY,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xad => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xae => OpCodeDetail {
+            instruction: Instruction::LDX,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xb0 => OpCodeDetail {
+            instruction: Instruction::BCS,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::Xb1 => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::Xb4 => OpCodeDetail {
+            instruction: Instruction::LDY,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::Xb5 => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::Xb6 => OpCodeDetail {
+            instruction: Instruction::LDX,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageY,
+        },
+        OpCode::Xb8 => OpCodeDetail {
+            instruction: Instruction::CLV,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xb9 => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::Xba => OpCodeDetail {
+            instruction: Instruction::TSX,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xbc => OpCodeDetail {
+            instruction: Instruction::LDY,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::Xbd => OpCodeDetail {
+            instruction: Instruction::LDA,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::Xbe => OpCodeDetail {
+            instruction: Instruction::LDX,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::Xc0 => OpCodeDetail {
+            instruction: Instruction::CPY,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xc1 => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::Xc4 => OpCodeDetail {
+            instruction: Instruction::CPY,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xc5 => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xc6 => OpCodeDetail {
+            instruction: Instruction::DEC,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xc8 => OpCodeDetail {
+            instruction: Instruction::INY,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xc9 => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xca => OpCodeDetail {
+            instruction: Instruction::DEX,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xcc => OpCodeDetail {
+            instruction: Instruction::CPY,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xcd => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xce => OpCodeDetail {
+            instruction: Instruction::DEC,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xd0 => OpCodeDetail {
+            instruction: Instruction::BNE,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::Xd1 => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::Xd5 => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::Xd6 => OpCodeDetail {
+            instruction: Instruction::DEC,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::Xd8 => OpCodeDetail {
+            instruction: Instruction::CLD,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xd9 => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::Xdd => OpCodeDetail {
+            instruction: Instruction::CMP,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::Xde => OpCodeDetail {
+            instruction: Instruction::DEC,
+            bytes: 3,
+            cycles: 7,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::Xe0 => OpCodeDetail {
+            instruction: Instruction::CPX,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xe1 => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::IndirectX,
+        },
+        OpCode::Xe4 => OpCodeDetail {
+            instruction: Instruction::CPX,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xe5 => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 2,
+            cycles: 3,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xe6 => OpCodeDetail {
+            instruction: Instruction::INC,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::ZeroPage,
+        },
+        OpCode::Xe8 => OpCodeDetail {
+            instruction: Instruction::INX,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xe9 => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Immediate,
+        },
+        OpCode::Xea => OpCodeDetail {
+            instruction: Instruction::NOP,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xec => OpCodeDetail {
+            instruction: Instruction::CPX,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xed => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xee => OpCodeDetail {
+            instruction: Instruction::INC,
+            bytes: 3,
+            cycles: 6,
+            address_mode: AddressingMode::Absolute,
+        },
+        OpCode::Xf0 => OpCodeDetail {
+            instruction: Instruction::BEQ,
+            bytes: 2,
+            cycles: 2,
+            address_mode: AddressingMode::Relative,
+        },
+        OpCode::Xf1 => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 2,
+            cycles: 5,
+            address_mode: AddressingMode::IndirectY,
+        },
+        OpCode::Xf5 => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 2,
+            cycles: 4,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::Xf6 => OpCodeDetail {
+            instruction: Instruction::INC,
+            bytes: 2,
+            cycles: 6,
+            address_mode: AddressingMode::ZeroPageX,
+        },
+        OpCode::Xf8 => OpCodeDetail {
+            instruction: Instruction::SED,
+            bytes: 1,
+            cycles: 2,
+            address_mode: AddressingMode::Implied,
+        },
+        OpCode::Xf9 => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteY,
+        },
+        OpCode::Xfd => OpCodeDetail {
+            instruction: Instruction::SBC,
+            bytes: 3,
+            cycles: 4,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+        OpCode::Xfe => OpCodeDetail {
+            instruction: Instruction::INC,
+            bytes: 3,
+            cycles: 7,
+            address_mode: AddressingMode::AbsoluteX,
+        },
+    }
+}

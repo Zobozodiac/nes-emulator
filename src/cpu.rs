@@ -1,11 +1,12 @@
+use std::ops::Add;
+
 use crate::bus::Bus;
 use crate::cartridge::{Cartridge, CHR_ROM_PAGE_SIZE, PRG_ROM_PAGE_SIZE};
 use crate::memory::Mem;
 use crate::opcodes;
-use crate::opcodes::{AddressingMode, OpCode};
+use crate::opcodes::{AddressingMode, Instruction, OpCode, OpCodeDetail};
 use crate::status;
 use crate::status::Flag;
-use std::ops::Add;
 
 // TODO the program counter will be implemented incorrectly when using brk and the jmp commands because it always will increase by 1 afterwards but it should ignore it. Need to find best place to define.
 
@@ -874,16 +875,187 @@ impl CPU {
         self.status.set_negative_flag(result);
     }
 
-    // pub fn load_and_run(&mut self, program: Vec<u8>) {
-    //     self.load(program);
-    //     self.reset();
-    //     self.run()
-    // }
-    //
-    // pub fn load(&mut self, program: Vec<u8>) {
-    //     self.memory.load_program(program);
-    //     self.memory.mem_write_u16(0xFFFC, 0x0600);
-    // }
+    pub fn run_opcode(&mut self, opcode: &OpCode) {
+        let OpCodeDetail {
+            instruction,
+            bytes,
+            address_mode: mode,
+            ..
+        } = opcodes::get_opcode_detail(&opcode);
+
+        let bytes = bytes - 1;
+
+        match instruction {
+            Instruction::ADC => {
+                self.adc(&mode, bytes);
+            }
+            Instruction::AND => {
+                self.and(&mode, bytes);
+            }
+            Instruction::ASL => {
+                self.asl(&mode, bytes);
+            }
+            Instruction::BCC => {
+                self.bcc(&mode, bytes);
+            }
+            Instruction::BCS => {
+                self.bcs(&mode, bytes);
+            }
+            Instruction::BEQ => {
+                self.beq(&mode, bytes);
+            }
+            Instruction::BIT => {
+                self.bit(&mode, bytes);
+            }
+            Instruction::BMI => {
+                self.bmi(&mode, bytes);
+            }
+            Instruction::BNE => {
+                self.bne(&mode, bytes);
+            }
+            Instruction::BPL => {
+                self.bpl(&mode, bytes);
+            }
+            Instruction::BRK => {
+                self.brk();
+            }
+            Instruction::BVC => {
+                self.bvc(&mode, bytes);
+            }
+            Instruction::BVS => {
+                self.bvs(&mode, bytes);
+            }
+            Instruction::CLC => {
+                self.clc();
+            }
+            Instruction::CLD => {
+                self.cld();
+            }
+            Instruction::CLI => {
+                self.cli();
+            }
+            Instruction::CLV => {
+                self.clv();
+            }
+            Instruction::CMP => {
+                self.cmp(&mode, bytes);
+            }
+            Instruction::CPX => {
+                self.cpx(&mode, bytes);
+            }
+            Instruction::CPY => {
+                self.cpy(&mode, bytes);
+            }
+            Instruction::DEC => {
+                self.dec(&mode, bytes);
+            }
+            Instruction::DEX => {
+                self.dex();
+            }
+            Instruction::DEY => {
+                self.dey();
+            }
+            Instruction::EOR => {
+                self.eor(&mode, bytes);
+            }
+            Instruction::INC => {
+                self.inc(&mode, bytes);
+            }
+            Instruction::INX => {
+                self.inx();
+            }
+            Instruction::INY => {
+                self.iny();
+            }
+            Instruction::JMP => {
+                self.jmp(&mode);
+            }
+            Instruction::JSR => {
+                self.jsr(&mode);
+            }
+            Instruction::LDA => {
+                self.lda(&mode, bytes);
+            }
+            Instruction::LDX => {
+                self.ldx(&mode, bytes);
+            }
+            Instruction::LDY => {
+                self.ldy(&mode, bytes);
+            }
+            Instruction::LSR => {
+                self.lsr(&mode, bytes);
+            }
+            Instruction::NOP => {
+                self.nop();
+            }
+            Instruction::ORA => {
+                self.ora(&mode, bytes);
+            }
+            Instruction::PHA => {
+                self.pha();
+            }
+            Instruction::PHP => {
+                self.php();
+            }
+            Instruction::PLA => {
+                self.pla();
+            }
+            Instruction::PLP => {
+                self.plp();
+            }
+            Instruction::ROL => {
+                self.rol(&mode, bytes);
+            }
+            Instruction::ROR => {
+                self.ror(&mode, bytes);
+            }
+            Instruction::RTI => {
+                self.rti();
+            }
+            Instruction::RTS => {
+                self.rts();
+            }
+            Instruction::SBC => {
+                self.sbc(&mode, bytes);
+            }
+            Instruction::SEC => {
+                self.sec();
+            }
+            Instruction::SED => {
+                self.sed();
+            }
+            Instruction::SEI => {
+                self.sei();
+            }
+            Instruction::STA => {
+                self.sta(&mode, bytes);
+            }
+            Instruction::STX => {
+                self.stx(&mode, bytes);
+            }
+            Instruction::STY => {
+                self.sty(&mode, bytes);
+            }
+            Instruction::TAX => {
+                self.tax();
+            }
+            Instruction::TAY => {
+                self.tay();
+            }
+            Instruction::TSX => {
+                self.tsx();
+            }
+            Instruction::TXA => {
+                self.txa();
+            }
+            Instruction::TXS => {
+                self.txs();
+            }
+            Instruction::TYA => {
+                self.tya();
+            }
+        };
+    }
 
     pub fn run(&mut self) {
         self.run_with_callback(|_| {});
@@ -912,195 +1084,9 @@ impl CPU {
             let code = self.memory.mem_read(self.program_counter);
             self.program_counter += 1;
 
-            let opcode = opcodes::OPSCODES_MAP.get(&code);
+            let opcode = opcodes::get_opcode(&code);
 
-            let OpCode {
-                name,
-                bytes,
-                address_mode: mode,
-                ..
-            } = match opcode {
-                Some(valid_opcode) => valid_opcode,
-                None => panic!("OpCode not found in HashMap."),
-            };
-
-            let bytes = *bytes - 1;
-
-            // println!("Opcode Name: {}\n", *name);
-
-            match *name {
-                "ADC" => {
-                    self.adc(mode, bytes);
-                }
-                "AND" => {
-                    self.and(mode, bytes);
-                }
-                "ASL" => {
-                    self.asl(mode, bytes);
-                }
-                "BCC" => {
-                    self.bcc(mode, bytes);
-                }
-                "BCS" => {
-                    self.bcs(mode, bytes);
-                }
-                "BEQ" => {
-                    self.beq(mode, bytes);
-                }
-                "BIT" => {
-                    self.bit(mode, bytes);
-                }
-                "BMI" => {
-                    self.bmi(mode, bytes);
-                }
-                "BNE" => {
-                    self.bne(mode, bytes);
-                }
-                "BPL" => {
-                    self.bpl(mode, bytes);
-                }
-                "BRK" => {
-                    self.brk();
-                }
-                "BVC" => {
-                    self.bvc(mode, bytes);
-                }
-                "BVS" => {
-                    self.bvs(mode, bytes);
-                }
-                "CLC" => {
-                    self.clc();
-                }
-                "CLD" => {
-                    self.cld();
-                }
-                "CLI" => {
-                    self.cli();
-                }
-                "CLV" => {
-                    self.clv();
-                }
-                "CMP" => {
-                    self.cmp(mode, bytes);
-                }
-                "CPX" => {
-                    self.cpx(mode, bytes);
-                }
-                "CPY" => {
-                    self.cpy(mode, bytes);
-                }
-                "DEC" => {
-                    self.dec(mode, bytes);
-                }
-                "DEX" => {
-                    self.dex();
-                }
-                "DEY" => {
-                    self.dey();
-                }
-                "EOR" => {
-                    self.eor(mode, bytes);
-                }
-                "INC" => {
-                    self.inc(mode, bytes);
-                }
-                "INX" => {
-                    self.inx();
-                }
-                "INY" => {
-                    self.iny();
-                }
-                "JMP" => {
-                    self.jmp(mode);
-                }
-                "JSR" => {
-                    self.jsr(mode);
-                }
-                "LDA" => {
-                    self.lda(mode, bytes);
-                }
-                "LDX" => {
-                    self.ldx(mode, bytes);
-                }
-                "LDY" => {
-                    self.ldy(mode, bytes);
-                }
-                "LSR" => {
-                    self.lsr(mode, bytes);
-                }
-                "NOP" => {
-                    self.nop();
-                }
-                "ORA" => {
-                    self.ora(mode, bytes);
-                }
-                "PHA" => {
-                    self.pha();
-                }
-                "PHP" => {
-                    self.php();
-                }
-                "PLA" => {
-                    self.pla();
-                }
-                "PLP" => {
-                    self.plp();
-                }
-                "ROL" => {
-                    self.rol(mode, bytes);
-                }
-                "ROR" => {
-                    self.ror(mode, bytes);
-                }
-                "RTI" => {
-                    self.rti();
-                }
-                "RTS" => {
-                    self.rts();
-                }
-                "SBC" => {
-                    self.sbc(mode, bytes);
-                }
-                "SEC" => {
-                    self.sec();
-                }
-                "SED" => {
-                    self.sed();
-                }
-                "SEI" => {
-                    self.sei();
-                }
-                "STA" => {
-                    self.sta(mode, bytes);
-                }
-                "STX" => {
-                    self.stx(mode, bytes);
-                }
-                "STY" => {
-                    self.sty(mode, bytes);
-                }
-                "TAX" => {
-                    self.tax();
-                }
-                "TAY" => {
-                    self.tay();
-                }
-                "TSX" => {
-                    self.tsx();
-                }
-                "TXA" => {
-                    self.txa();
-                }
-                "TXS" => {
-                    self.txs();
-                }
-                "TYA" => {
-                    self.tya();
-                }
-                _ => {
-                    panic!("Unknown opcode.")
-                }
-            }
+            self.run_opcode(&opcode)
         }
     }
 }
@@ -2038,8 +2024,6 @@ mod test_opcodes {
 
 #[cfg(test)]
 mod test_run {
-    use super::*;
-
     #[test]
     fn test_snake() {
         // let mut cpu = CPU::new();
