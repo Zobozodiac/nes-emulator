@@ -106,7 +106,9 @@ impl CPU {
                 println!("address: {:04X}", address);
                 address.wrapping_add(self.register_y as u16)
             }
-            AddressingMode::Relative => program_counter,
+            AddressingMode::Relative => {
+                program_counter
+            },
             _ => {
                 panic!("mode does not support getting an address");
             }
@@ -257,9 +259,7 @@ impl CPU {
     {
         let mut not_break = true;
 
-        let mut count = 0;
-
-        while not_break & (count < 100) {
+        while not_break {
             let code = self.bus.mem_read(self.program_counter);
             let opcode = OpCodeDetail::from_opcode(&OpCode::from_code(&code));
 
@@ -271,8 +271,6 @@ impl CPU {
             callback(self);
 
             self.run_opcode(&opcode);
-
-            count += 1
         }
     }
 
@@ -469,6 +467,8 @@ impl CPU {
                 let result = self.status.set_decrement_flags(value);
 
                 self.register_x = result;
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::DEY => {
                 let value = self.register_y;
@@ -476,6 +476,8 @@ impl CPU {
                 let result = self.status.set_decrement_flags(value);
 
                 self.register_y = result;
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::EOR => {
                 let value = self.get_operand_address_value(&mode);
@@ -508,6 +510,8 @@ impl CPU {
                 let result = self.status.set_increment_flags(value);
 
                 self.register_x = result;
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::INY => {
                 let value = self.register_y;
@@ -515,6 +519,8 @@ impl CPU {
                 let result = self.status.set_increment_flags(value);
 
                 self.register_y = result;
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::JMP => {
                 self.jmp(&mode);
@@ -592,6 +598,8 @@ impl CPU {
             }
             Instruction::PHA => {
                 self.push_to_stack(self.register_a);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::PHP => {
                 let break_flag = self.status.read_flag(Flag::Break);
@@ -605,6 +613,8 @@ impl CPU {
 
                 self.status.set_flag(Flag::Break, break_flag);
                 self.status.set_flag(Flag::Ignored, ignored_flag);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::PLA => {
                 let result = self.pull_from_stack();
@@ -613,9 +623,13 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::PLP => {
                 self.plp();
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::ROL => {
                 let value = self.get_operand_address_value(&mode);
@@ -673,7 +687,7 @@ impl CPU {
             Instruction::RTS => {
                 let program_counter = self.pull_from_stack_u16().wrapping_add(1);
 
-                self.program_counter = program_counter
+                self.program_counter = program_counter + 1
             }
             Instruction::SBC => {
                 let value = self.get_operand_address_value(&mode);
@@ -724,6 +738,8 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::TAY => {
                 let result = self.register_a;
@@ -732,6 +748,8 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::TSX => {
                 let result = self.stack_pointer;
@@ -740,6 +758,8 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::TXA => {
                 let result = self.register_x;
@@ -748,6 +768,8 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::TXS => {
                 let result = self.register_x;
@@ -756,6 +778,8 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::TYA => {
                 let result = self.register_y;
@@ -764,6 +788,8 @@ impl CPU {
 
                 self.status.set_zero_flag(result);
                 self.status.set_negative_flag(result);
+
+                self.apply_bytes_to_program_counter(bytes);
             }
         };
     }

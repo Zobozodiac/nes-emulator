@@ -143,8 +143,8 @@ fn cpu_opcode_assembly_string(cpu: &CPU) -> String {
             ))
         }
         AddressingMode::Relative => {
-            let address = cpu.get_operand_address(&opcode_detail.address_mode);
-            opcode_string.push_str(&format!(" ${:02X}", address))
+            let offset = cpu.bus.mem_read(cpu.program_counter + 1) as u16;
+            opcode_string.push_str(&format!(" ${:02X}", cpu.program_counter + 2 + offset))
         }
         AddressingMode::ZeroPage => {
             let value = cpu.get_operand_address_value(&opcode_detail.address_mode);
