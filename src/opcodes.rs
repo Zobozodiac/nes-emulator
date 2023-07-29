@@ -313,6 +313,7 @@ impl OpCode {
     }
 }
 
+#[derive(Debug)]
 pub struct OpCodeDetail {
     pub instruction: Instruction,
     pub bytes: u8,
@@ -1233,6 +1234,7 @@ impl OpCodeDetail {
     }
 }
 
+#[derive(Debug)]
 pub enum AddressingMode {
     Immediate,
     ZeroPage,
@@ -1249,6 +1251,7 @@ pub enum AddressingMode {
     Accumulator,
 }
 
+#[derive(Debug)]
 pub enum Instruction {
     BRK,
     PHP,

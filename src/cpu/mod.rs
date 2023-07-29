@@ -1,3 +1,4 @@
+use sdl2::sys::wchar_t;
 use std::ops::Add;
 
 use crate::bus::Bus;
@@ -9,6 +10,7 @@ use crate::status::Flag;
 // TODO the program counter will be implemented incorrectly when using brk and the jmp commands because it always will increase by 1 afterwards but it should ignore it. Need to find best place to define.
 
 pub mod stack;
+pub mod trace;
 
 pub struct CPU {
     pub register_a: u8,
@@ -28,7 +30,7 @@ impl CPU {
             register_y: 0,
             status: status::Status::new(),
             program_counter: 0,
-            stack_pointer: 0xff,
+            stack_pointer: 0xfd,
             bus,
         }
     }
@@ -38,7 +40,7 @@ impl CPU {
         self.register_a = 0;
         self.register_x = 0;
         self.register_y = 0;
-        self.stack_pointer = 0xff;
+        self.stack_pointer = 0xfd;
         self.status.reset();
 
         self.program_counter = self.bus.mem_read_u16(0xfffc);
@@ -46,11 +48,13 @@ impl CPU {
 
     /// We get the address in the memory that the address mode refers to.
     pub fn get_operand_address(&self, mode: &AddressingMode) -> u16 {
+        let program_counter = self.program_counter + 1;
+
         match mode {
             AddressingMode::Immediate => {
                 // The program counter is the address of the next instruction, so this is what we immediately want.
                 // For example LDA #$a9 we want to use a9 as the actual value. In this case the program counter may be 0x0002 and we know the value at 0x0002 is 0xa9.
-                self.program_counter
+                program_counter
             }
             AddressingMode::ZeroPage => {
                 // Here we have something like:
@@ -58,7 +62,7 @@ impl CPU {
                 // LDA $a9
                 // ```
                 // In this case what we would like this function to return is 0xa9. We have the program counter which may be 0x0002 and we know that the value at 0x0002 is 0xa9, so we just need to read the value at the program counter.
-                self.bus.mem_read(self.program_counter) as u16
+                self.bus.mem_read(program_counter) as u16
             }
             AddressingMode::ZeroPageX => {
                 // Here we have something like:
@@ -68,39 +72,41 @@ impl CPU {
                 // ```
                 // In this case we want to return 0xa2, because we take the 0xa1 and we add X to it (which is 0x01) to get 0xa2. Just like with zero page addressing we have the program counter like 0x0004, and if we read the value in memory at 0x0004 it is 0xa1, so we need to take the value at the program counter and add x to it.
                 self.bus
-                    .mem_read(self.program_counter)
+                    .mem_read(program_counter)
                     .wrapping_add(self.register_x) as u16
             }
             AddressingMode::ZeroPageY => self
                 .bus
-                .mem_read(self.program_counter)
+                .mem_read(program_counter)
                 .wrapping_add(self.register_y) as u16,
-            AddressingMode::Absolute => self.bus.mem_read_u16(self.program_counter),
+            AddressingMode::Absolute => self.bus.mem_read_u16(program_counter),
             AddressingMode::AbsoluteX => self
                 .bus
-                .mem_read_u16(self.program_counter)
+                .mem_read_u16(program_counter)
                 .wrapping_add(self.register_x as u16),
             AddressingMode::AbsoluteY => self
                 .bus
-                .mem_read_u16(self.program_counter)
+                .mem_read_u16(program_counter)
                 .wrapping_add(self.register_y as u16),
             AddressingMode::Indirect => {
-                let address = self.bus.mem_read_u16(self.program_counter);
+                let address = self.bus.mem_read_u16(program_counter);
                 self.bus.mem_read_u16(address)
             }
             AddressingMode::IndirectX => {
                 let address = self
                     .bus
-                    .mem_read(self.program_counter)
+                    .mem_read(program_counter)
                     .wrapping_add(self.register_x) as u16;
                 self.bus.mem_read_u16(address)
             }
             AddressingMode::IndirectY => {
-                let base = self.bus.mem_read(self.program_counter) as u16;
+                let base = self.bus.mem_read(program_counter) as u16;
+                println!("base: {:02X}", base);
                 let address = self.bus.mem_read_u16(base);
+                println!("address: {:04X}", address);
                 address.wrapping_add(self.register_y as u16)
             }
-            AddressingMode::Relative => self.program_counter,
+            AddressingMode::Relative => program_counter,
             _ => {
                 panic!("mode does not support getting an address");
             }
@@ -249,27 +255,36 @@ impl CPU {
     where
         F: FnMut(&mut CPU),
     {
-        loop {
+        let mut not_break = true;
+
+        let mut count = 0;
+
+        while not_break & (count < 100) {
+            let code = self.bus.mem_read(self.program_counter);
+            let opcode = OpCodeDetail::from_opcode(&OpCode::from_code(&code));
+
+            match opcode.instruction {
+                Instruction::BRK => break,
+                _ => {}
+            };
+
             callback(self);
 
-            let code = self.bus.mem_read(self.program_counter);
-            self.program_counter += 1;
+            self.run_opcode(&opcode);
 
-            let opcode = OpCode::from_code(&code);
-
-            self.run_opcode(&opcode)
+            count += 1
         }
     }
 
-    pub fn run_opcode(&mut self, opcode: &OpCode) {
+    pub fn run_opcode(&mut self, opcode: &OpCodeDetail) {
         let OpCodeDetail {
             instruction,
             bytes,
             address_mode: mode,
             ..
-        } = OpCodeDetail::from_opcode(&opcode);
+        } = opcode;
 
-        let bytes = bytes - 1;
+        let bytes = *bytes;
 
         match instruction {
             Instruction::ADC => {
@@ -383,7 +398,7 @@ impl CPU {
 
                 self.status.set_flag(Flag::Break, break_flag);
 
-                self.program_counter = self.bus.mem_read_u16(0xfffe)
+                self.program_counter = self.bus.mem_read_u16(0xfffe);
             }
             Instruction::BVC => {
                 let overflow = self.status.read_flag(Flag::Overflow);
@@ -405,15 +420,19 @@ impl CPU {
             }
             Instruction::CLC => {
                 self.status.set_flag(Flag::Carry, false);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::CLD => {
                 self.status.set_flag(Flag::Decimal, false);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::CLI => {
                 self.status.set_flag(Flag::Interrupt, false);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::CLV => {
                 self.status.set_flag(Flag::Overflow, false);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::CMP => {
                 let accumulator = self.register_a;
@@ -557,7 +576,9 @@ impl CPU {
 
                 self.apply_bytes_to_program_counter(bytes);
             }
-            Instruction::NOP => {}
+            Instruction::NOP => {
+                self.apply_bytes_to_program_counter(bytes);
+            }
             Instruction::ORA => {
                 let value = self.get_operand_address_value(&mode);
 
@@ -665,12 +686,15 @@ impl CPU {
             }
             Instruction::SEC => {
                 self.status.set_flag(Flag::Carry, true);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::SED => {
                 self.status.set_flag(Flag::Decimal, true);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::SEI => {
                 self.status.set_flag(Flag::Interrupt, true);
+                self.apply_bytes_to_program_counter(bytes);
             }
             Instruction::STA => {
                 let address = self.get_operand_address(&mode);

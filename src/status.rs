@@ -9,6 +9,7 @@ pub enum Flag {
     Carry,
 }
 
+#[derive(Debug)]
 pub struct Status {
     negative: bool,
     overflow: bool,
@@ -25,10 +26,10 @@ impl Status {
         Status {
             negative: false,
             overflow: false,
-            ignored: false,
+            ignored: true,
             break_flag: false,
             decimal: false,
-            interrupt: false,
+            interrupt: true,
             zero: false,
             carry: false,
         }
@@ -37,10 +38,10 @@ impl Status {
     pub fn reset(&mut self) {
         self.negative = false;
         self.overflow = false;
-        self.ignored = false;
+        self.ignored = true;
         self.break_flag = false;
         self.decimal = false;
-        self.interrupt = false;
+        self.interrupt = true;
         self.zero = false;
         self.carry = false;
     }

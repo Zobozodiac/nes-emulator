@@ -1,0 +1,1 @@
+cargo run --bin nestest > my_nes.log
