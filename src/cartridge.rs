@@ -1,5 +1,3 @@
-use std::fs;
-
 pub const PRG_ROM_PAGE_SIZE: usize = 16384;
 pub const CHR_ROM_PAGE_SIZE: usize = 8192;
 

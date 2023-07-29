@@ -1,9 +1,7 @@
 use std::ops::Add;
-use std::rc::Rc;
 
 use crate::bus::Bus;
 use crate::memory::Mem;
-use crate::opcodes;
 use crate::opcodes::{AddressingMode, Instruction, OpCode, OpCodeDetail};
 use crate::status;
 use crate::status::Flag;
@@ -47,7 +45,7 @@ impl CPU {
     }
 
     /// We get the address in the memory that the address mode refers to.
-    fn get_operand_address(&self, mode: &AddressingMode) -> u16 {
+    pub fn get_operand_address(&self, mode: &AddressingMode) -> u16 {
         match mode {
             AddressingMode::Immediate => {
                 // The program counter is the address of the next instruction, so this is what we immediately want.
@@ -109,7 +107,7 @@ impl CPU {
         }
     }
 
-    fn get_operand_address_value(&mut self, mode: &AddressingMode) -> u8 {
+    pub fn get_operand_address_value(&self, mode: &AddressingMode) -> u8 {
         match mode {
             AddressingMode::Accumulator => {
                 return self.register_a;
@@ -257,7 +255,7 @@ impl CPU {
             let code = self.bus.mem_read(self.program_counter);
             self.program_counter += 1;
 
-            let opcode = opcodes::get_opcode(&code);
+            let opcode = OpCode::from_code(&code);
 
             self.run_opcode(&opcode)
         }
@@ -269,7 +267,7 @@ impl CPU {
             bytes,
             address_mode: mode,
             ..
-        } = opcodes::get_opcode_detail(&opcode);
+        } = OpCodeDetail::from_opcode(&opcode);
 
         let bytes = bytes - 1;
 

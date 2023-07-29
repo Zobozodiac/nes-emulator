@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 use crate::cartridge::Cartridge;
 use crate::memory::{Mem, Storage};
 
