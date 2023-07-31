@@ -1,6 +1,6 @@
 use crate::cpu::CPU;
 use crate::memory::Mem;
-use crate::opcodes::{AddressingMode, OpCode, OpCodeDetail};
+use crate::opcodes::{AddressingMode, Instruction, OpCode, OpCodeDetail};
 
 pub fn trace(cpu: &CPU) -> String {
     let mut full_trace = String::new();
@@ -78,10 +78,18 @@ fn cpu_opcode_assembly_string(cpu: &CPU) -> String {
 
     match opcode_detail.address_mode {
         AddressingMode::Accumulator => opcode_string.push_str(" A"),
-        AddressingMode::Absolute => opcode_string.push_str(&format!(
-            " ${:04X}",
-            cpu.bus.mem_read_u16(cpu.program_counter + 1)
-        )),
+        AddressingMode::Absolute => {
+            let address = cpu.get_operand_address(&opcode_detail.address_mode);
+            let value = cpu.get_operand_address_value(&opcode_detail.address_mode);
+
+            match opcode_detail.instruction {
+                Instruction::JMP | Instruction::JSR => opcode_string.push_str(&format!(
+                    " ${:04X}",
+                    cpu.bus.mem_read_u16(cpu.program_counter + 1)
+                )),
+                _ => opcode_string.push_str(&format!(" ${:04X} = {:02X}", address, value,)),
+            }
+        }
         AddressingMode::AbsoluteX => {
             let address = cpu.get_operand_address(&opcode_detail.address_mode);
             let value = cpu.get_operand_address_value(&opcode_detail.address_mode);
@@ -112,7 +120,7 @@ fn cpu_opcode_assembly_string(cpu: &CPU) -> String {
         AddressingMode::Indirect => {
             let address = cpu.get_operand_address(&opcode_detail.address_mode);
             opcode_string.push_str(&format!(
-                " (${:02X}) = {:04X}",
+                " (${:04X}) = {:04X}",
                 cpu.bus.mem_read_u16(cpu.program_counter + 1),
                 address
             ))
@@ -124,7 +132,7 @@ fn cpu_opcode_assembly_string(cpu: &CPU) -> String {
             opcode_string.push_str(&format!(
                 " (${:02X},X) @ {:02X} = {:04X} = {:02X}",
                 cpu.bus.mem_read(cpu.program_counter + 1),
-                cpu.bus.mem_read(cpu.program_counter + 1),
+                cpu.bus.mem_read(cpu.program_counter + 1).wrapping_add(cpu.register_x),
                 address,
                 value
             ))

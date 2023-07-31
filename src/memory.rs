@@ -17,6 +17,18 @@ pub trait Mem {
 
         u16::from_le_bytes([lo, hi])
     }
+
+    fn mem_read_u16_wrapping_boundary(&self, address:u16) -> u16 {
+        let lo = self.mem_read(address);
+
+        let hi_address = address.wrapping_add(1);
+
+        if (hi_address & 0xff00) == (address & 0xff00) {
+            u16::from_le_bytes([lo, self.mem_read(hi_address)])
+        } else {
+            u16::from_le_bytes([lo, self.mem_read((address & 0xff00))])
+        }
+    }
 }
 
 pub struct Storage {

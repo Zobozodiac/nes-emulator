@@ -97,18 +97,14 @@ impl CPU {
                     .bus
                     .mem_read(program_counter)
                     .wrapping_add(self.register_x) as u16;
-                self.bus.mem_read_u16(address)
+                self.bus.mem_read_u16_wrapping_boundary(address)
             }
             AddressingMode::IndirectY => {
                 let base = self.bus.mem_read(program_counter) as u16;
-                println!("base: {:02X}", base);
-                let address = self.bus.mem_read_u16(base);
-                println!("address: {:04X}", address);
+                let address = self.bus.mem_read_u16_wrapping_boundary(base);
                 address.wrapping_add(self.register_y as u16)
             }
-            AddressingMode::Relative => {
-                program_counter
-            },
+            AddressingMode::Relative => program_counter,
             _ => {
                 panic!("mode does not support getting an address");
             }
@@ -311,9 +307,18 @@ impl CPU {
 
                 let [lo, hi] = u16::to_le_bytes(result);
 
-                self.register_a = lo;
+                match mode {
+                    AddressingMode::Accumulator => {
+                        self.register_a = lo;
+                    }
+                    _ => {
+                        let address = self.get_operand_address(&mode);
 
-                self.status.set_zero_flag(lo); // TODO need to check if this is correct and not based on result (rather than lo)
+                        self.bus.mem_write(address, lo);
+                    }
+                }
+
+                self.status.set_zero_flag(lo);
                 self.status.set_negative_flag(lo);
                 self.status.set_flag(Flag::Carry, hi > 0);
 
@@ -526,7 +531,7 @@ impl CPU {
                 self.jmp(&mode);
             }
             Instruction::JSR => {
-                self.push_to_stack_u16(self.program_counter.wrapping_add(1));
+                self.push_to_stack_u16(self.program_counter.wrapping_add(2));
 
                 self.jmp(&mode);
             }
@@ -534,9 +539,8 @@ impl CPU {
                 let value = self.get_operand_address_value(&mode);
 
                 self.register_a = value;
-                let result = self.register_a;
-                self.status.set_zero_flag(result);
-                self.status.set_negative_flag(result);
+                self.status.set_zero_flag(value);
+                self.status.set_negative_flag(value);
 
                 self.apply_bytes_to_program_counter(bytes);
             }
@@ -577,6 +581,7 @@ impl CPU {
                     }
                 }
 
+                self.status.set_flag(Flag::Negative, false);
                 self.status.set_zero_flag(result);
                 self.status.set_flag(Flag::Carry, carry_flag > 0);
 
@@ -685,7 +690,7 @@ impl CPU {
                 self.program_counter = program_counter;
             }
             Instruction::RTS => {
-                let program_counter = self.pull_from_stack_u16().wrapping_add(1);
+                let program_counter = self.pull_from_stack_u16();
 
                 self.program_counter = program_counter + 1
             }
@@ -776,8 +781,8 @@ impl CPU {
 
                 self.stack_pointer = result;
 
-                self.status.set_zero_flag(result);
-                self.status.set_negative_flag(result);
+                // self.status.set_zero_flag(result);
+                // self.status.set_negative_flag(result);
 
                 self.apply_bytes_to_program_counter(bytes);
             }
