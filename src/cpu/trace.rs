@@ -145,7 +145,7 @@ fn cpu_opcode_assembly_string(cpu: &CPU) -> String {
                 " (${:02X}),Y = {:04X} @ {:04X} = {:02X}",
                 cpu.bus.mem_read(cpu.program_counter + 1),
                 cpu.bus
-                    .mem_read_u16(cpu.bus.mem_read(cpu.program_counter + 1) as u16),
+                    .mem_read_u16_wrapping_boundary(cpu.bus.mem_read(cpu.program_counter + 1) as u16),
                 address,
                 value
             ))

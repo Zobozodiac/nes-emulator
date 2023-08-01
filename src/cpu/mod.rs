@@ -90,7 +90,7 @@ impl CPU {
                 .wrapping_add(self.register_y as u16),
             AddressingMode::Indirect => {
                 let address = self.bus.mem_read_u16(program_counter);
-                self.bus.mem_read_u16(address)
+                self.bus.mem_read_u16_wrapping_boundary(address)
             }
             AddressingMode::IndirectX => {
                 let address = self
