@@ -1,3 +1,6 @@
+use crate::cartridge::mapper::Mapper;
+use crate::memory::Mem;
+
 pub const PRG_ROM_PAGE_SIZE: usize = 16384;
 pub const CHR_ROM_PAGE_SIZE: usize = 8192;
 
@@ -10,16 +13,18 @@ pub enum Mirroring {
 pub struct Cartridge {
     pub prg_rom: Vec<u8>,
     pub chr_rom: Vec<u8>,
-    pub mapper_type: u8,
+    pub mapper: Mapper,
     pub mirroring_type: Mirroring,
 }
+
+mod mapper;
 
 impl Cartridge {
     pub fn new(raw: &Vec<u8>) -> Self {
         let control_byte_6 = raw[6];
         let control_byte_7 = raw[7];
 
-        let mapper = (control_byte_7 & 0b1111_0000) | (control_byte_6 >> 4);
+        let mapper_type = (control_byte_7 & 0b1111_0000) | (control_byte_6 >> 4);
 
         let ines_version: u8;
 
@@ -58,12 +63,43 @@ impl Cartridge {
         let prg_rom_start = 16 + if skip_trainer { 512 } else { 0 };
         let chr_rom_start = prg_rom_start + prg_rom_size;
 
+        let mapper = match mapper_type {
+            0 => Mapper::Mapper000 {
+                mirror_bank: prg_rom_pages == 1,
+            },
+            _ => {
+                panic!("Mapper {} not defined", mapper_type)
+            }
+        };
+
         Cartridge {
             prg_rom: raw[prg_rom_start..(prg_rom_start + prg_rom_size)].to_vec(),
             chr_rom: raw[chr_rom_start..(chr_rom_start + chr_rom_size)].to_vec(),
-            mapper_type: mapper,
+            mapper,
             mirroring_type: screen_mirroring,
         }
+    }
+}
+
+impl Cartridge {
+    pub fn cpu_write(&mut self, address: u16, data: u8) {
+        let mapper_address = self.mapper.get_pgr_address(address);
+        self.prg_rom[mapper_address as usize] = data;
+    }
+
+    pub fn cpu_read(&self, address: u16) -> u8 {
+        let mapper_address = self.mapper.get_pgr_address(address);
+        self.prg_rom[mapper_address as usize]
+    }
+
+    pub fn ppu_write(&mut self, address: u16, data: u8) {
+        let mapper_address = self.mapper.get_chr_address(address);
+        self.chr_rom[mapper_address as usize] = data;
+    }
+
+    pub fn ppu_read(&self, address: u16) -> u8 {
+        let mapper_address = self.mapper.get_chr_address(address);
+        self.chr_rom[mapper_address as usize]
     }
 }
 
@@ -80,7 +116,7 @@ mod test {
             0x1a,
             0x02,
             0x02,
-            0b0001_0001,
+            0b0000_0001,
             0b0000_0000,
             0x00,
             0x00,
@@ -92,7 +128,7 @@ mod test {
 
         let cartridge = Cartridge::new(&contents);
 
-        assert_eq!(cartridge.mapper_type, 1);
+        assert_eq!(cartridge.mapper, Mapper::Mapper000 { mirror_bank: true });
         assert_eq!(cartridge.prg_rom, [0x01; PRG_ROM_PAGE_SIZE * 2]);
         assert_eq!(cartridge.chr_rom, [0x02; CHR_ROM_PAGE_SIZE * 2]);
     }

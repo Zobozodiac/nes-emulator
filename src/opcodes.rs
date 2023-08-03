@@ -1,3 +1,5 @@
+use crate::errors::NesError;
+
 pub enum OpCode {
     X00,
     X01,
@@ -153,8 +155,8 @@ pub enum OpCode {
 }
 
 impl OpCode {
-    pub fn from_code(code: &u8) -> OpCode {
-        match code {
+    pub fn from_code(code: &u8) -> Result<OpCode, NesError> {
+        let opcode = match code {
             0x00 => OpCode::X00,
             0x01 => OpCode::X01,
             0x05 => OpCode::X05,
@@ -307,9 +309,11 @@ impl OpCode {
             0xfd => OpCode::Xfd,
             0xfe => OpCode::Xfe,
             _ => {
-                panic!("Unknown OpCode")
+                return Err(NesError::new(&format!("Unknown OpCode: {}", code)));
             }
-        }
+        };
+
+        Ok(opcode)
     }
 }
 
